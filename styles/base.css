@@ -1,0 +1,188 @@
+/*
+  Global reset and document flow.
+
+  The concept locked the document to a single viewport (`height: 100dvh;
+  overflow: hidden`). TASK-037 removes that lock: the document now scrolls
+  normally and only the hero shell keeps the full-viewport height, so every
+  section below it can exist. Horizontal overflow stays clipped — parallax
+  and HUD chrome push elements sideways and nothing may produce a scrollbar.
+*/
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  color-scheme: dark;
+}
+
+html,
+body {
+  width: 100%;
+  background-color: var(--rcs-bg);
+  color: var(--rcs-text);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Lenis drives scrolling; a native smooth-scroll on top of it double-eases. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+/* Set while the mobile nav sheet is open, so the page behind it cannot move. */
+body.menu-open {
+  overflow: hidden;
+}
+
+/*
+  The boot-flash guard — TASK-169, REQ-131.
+
+  `data-booting` is written on `<html>` by the blocking script in
+  `app/layout.tsx` and removed by `Preloader` when the sequence ends. While it
+  is present the shell is not painted, so the first frame of a cold load is
+  the page's black ground rather than a hero that the overlay is about to
+  cover.
+
+  `visibility` rather than `display`: the shell keeps its layout, so nothing
+  reflows when it comes back and the hero's entrance stagger starts from a
+  settled document. The preloader is a sibling of `.site-shell`, not a
+  descendant, so it is unaffected.
+*/
+[data-booting] .site-shell {
+  visibility: hidden;
+}
+
+/* The document-level column. Sections size themselves; this only bounds width. */
+.page {
+  position: relative;
+  z-index: var(--z-content);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/*
+  The shell every section below the hero uses. Only vertical rhythm, width
+  bounding, and the stacking context that lets each section own a grid plane
+  and its own HUD chrome — everything else is the section's own stylesheet.
+  Declared once so no two sections can drift apart on padding.
+*/
+.section {
+  position: relative;
+  width: 100%;
+  padding: var(--section-pad-y) var(--section-pad-x);
+  background-color: var(--rcs-bg-section);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/*
+  TASK-106 — the hero sits on true black and the sections on #08090C, so the
+  join between them is a 3-value step that reads as a faint band at the top of
+  the first section. This bridges it over the first 160px. It is drawn on the
+  first section only; every later boundary is section-to-section and flat.
+*/
+.hero-viewport ~ .section:nth-of-type(2)::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: var(--sp-15);
+  z-index: var(--z-background);
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    var(--rcs-bg) 0%,
+    transparent 100%
+  );
+}
+
+.section__inner {
+  position: relative;
+  z-index: var(--z-content);
+  width: 100%;
+  max-width: var(--section-max-w);
+  margin-inline: auto;
+}
+
+/* A section's own hairline top edge, so the page reads as stacked panels. */
+.section--ruled {
+  border-top: var(--hairline) solid var(--rcs-hairline);
+}
+
+/*
+  Visually hidden, still announced. Used wherever a component shows animated
+  or decorative text that assistive tech should receive in settled form —
+  the Readout scramble, the Placeholder caption.
+*/
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/*
+  ACC-002 — a visible focus indicator on every keyboard-reached element.
+  Declared once here rather than per component so nothing can ship without
+  one. The reticle cursor never overrides this (ACC-005).
+*/
+:focus-visible {
+  outline: var(--hairline-thick) solid var(--rcs-accent-ice);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Shared entrance animation — the concept's `.anim` contract, carried over
+   verbatim (DES-005). Elements set their own `--d` delay inline.
+   ========================================================================== */
+.anim {
+  opacity: 0;
+  transform: translateY(22px) scale(0.98);
+  filter: blur(6px);
+  animation: reveal 0.85s var(--ease-out) forwards;
+  animation-delay: var(--d, 0s);
+}
+
+@keyframes reveal {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* ==========================================================================
+   Accessibility: reduced motion — ACC-001. Entrance animation, the header
+   slide, and the sheet stagger all settle instantly; nothing is hidden.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+  }
+
+  .anim {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation: none !important;
+  }
+}

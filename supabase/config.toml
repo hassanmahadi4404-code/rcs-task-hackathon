@@ -1,0 +1,13 @@
+# Local Supabase for the Starter kit. `npx supabase start` reads this.
+project_id = "rcs-task-kit"
+
+[db]
+major_version = 17
+
+[auth]
+site_url = "http://localhost:3000"
+# The seed creates every user; nobody signs up. Email sign-in stays on.
+enable_signup = false
+
+[auth.email]
+enable_confirmations = false

@@ -1,0 +1,530 @@
+/* ==========================================================================
+   HUD primitive styles — TASK-026 … TASK-030.
+
+   Frame, hairline, section header, grid plane, readout, placeholder. No
+   color, duration, or easing literal appears below; everything resolves from
+   config/tokens.css (GUD-002).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Frame — corner-bracket container
+   -------------------------------------------------------------------------- */
+.hud-frame {
+  position: relative;
+  --frame-pad: var(--sp-6);
+  --frame-bracket: var(--bracket-len);
+  --frame-line: var(--rcs-hairline);
+  --frame-accent: var(--rcs-text);
+}
+
+.hud-frame--sm {
+  --frame-pad: var(--sp-4);
+  --frame-bracket: calc(var(--bracket-len) * 0.7);
+}
+
+.hud-frame--lg {
+  --frame-pad: var(--sp-8);
+  --frame-bracket: calc(var(--bracket-len) * 1.35);
+}
+
+.hud-frame--accent {
+  --frame-line: var(--rcs-accent-hairline);
+  --frame-accent: var(--rcs-accent-ice);
+}
+
+/* The connecting rules sit at a lower opacity than the brackets themselves,
+   so the corners read as the structure and the edges as a suggestion. */
+.hud-frame--rules::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--hairline) solid var(--frame-line);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.hud-frame__corners {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hud-frame__corner {
+  position: absolute;
+  width: var(--frame-bracket);
+  height: var(--frame-bracket);
+  border: 0 solid var(--frame-accent);
+}
+
+.hud-frame__corner--tl {
+  top: 0;
+  left: 0;
+  border-top-width: var(--hairline);
+  border-left-width: var(--hairline);
+}
+
+.hud-frame__corner--tr {
+  top: 0;
+  right: 0;
+  border-top-width: var(--hairline);
+  border-right-width: var(--hairline);
+}
+
+.hud-frame__corner--bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: var(--hairline);
+  border-left-width: var(--hairline);
+}
+
+.hud-frame__corner--br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: var(--hairline);
+  border-right-width: var(--hairline);
+}
+
+/* The label interrupts the top rule rather than floating over it. */
+.hud-frame__label {
+  position: absolute;
+  top: 0;
+  left: calc(var(--frame-bracket) + var(--sp-3));
+  transform: translateY(-50%);
+  padding-inline: var(--sp-2);
+  /* TASK-106 — the label knocks a hole in the frame's top rule by painting
+     the section's ground over it, so it has to be the section ground, not
+     the hero's true black. */
+  background: var(--rcs-bg-section);
+  /* TASK-109 — a UI label, so the secondary display face rather than the
+     telemetry mono (REQ-104). */
+  font-family: var(--font-secondary);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-telemetry);
+  text-transform: uppercase;
+  color: var(--rcs-muted);
+  white-space: nowrap;
+}
+
+.hud-frame--accent .hud-frame__label {
+  color: var(--rcs-accent-ice);
+}
+
+.hud-frame__body {
+  position: relative;
+  padding: var(--frame-pad);
+}
+
+.hud-frame--labelled > .hud-frame__body {
+  padding-top: calc(var(--frame-pad) + var(--sp-1));
+}
+
+/* --------------------------------------------------------------------------
+   Hairline
+   -------------------------------------------------------------------------- */
+.hud-hairline {
+  display: block;
+  --line-color: var(--rcs-hairline);
+}
+
+.hud-hairline--strong {
+  --line-color: var(--rcs-hairline-strong);
+}
+
+.hud-hairline--accent {
+  --line-color: var(--rcs-accent-hairline);
+}
+
+.hud-hairline--horizontal {
+  width: 100%;
+  height: var(--hairline);
+  background: linear-gradient(to right, var(--line-color), var(--line-color));
+}
+
+.hud-hairline--vertical {
+  width: var(--hairline);
+  height: 100%;
+  background: linear-gradient(to bottom, var(--line-color), var(--line-color));
+}
+
+.hud-hairline--fade-start {
+  mask-image: linear-gradient(to right, transparent, #000 22%);
+}
+
+.hud-hairline--fade-end {
+  mask-image: linear-gradient(to right, #000 78%, transparent);
+}
+
+.hud-hairline--fade-both {
+  mask-image: linear-gradient(to right, transparent, #000 18%, #000 82%, transparent);
+}
+
+.hud-hairline--vertical.hud-hairline--fade-start {
+  mask-image: linear-gradient(to bottom, transparent, #000 22%);
+}
+
+.hud-hairline--vertical.hud-hairline--fade-end {
+  mask-image: linear-gradient(to bottom, #000 78%, transparent);
+}
+
+.hud-hairline--vertical.hud-hairline--fade-both {
+  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   Section header
+   -------------------------------------------------------------------------- */
+.hud-section-header {
+  margin-bottom: var(--sp-9);
+}
+
+.hud-section-header__row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-4);
+}
+
+/* Display face, permitted here for the index numeral only — DES-003. */
+.hud-section-header__index {
+  font-family: var(--font-display);
+  font-size: var(--fs-index);
+  line-height: 1;
+  color: var(--rcs-accent-ice);
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+/* TASK-109 — the secondary display face's home ground: a section heading at
+   --fs-h2, well above the size where it stays comfortable (REQ-104). */
+.hud-section-header__title {
+  font-family: var(--font-secondary);
+  font-size: var(--fs-h2);
+  font-weight: 500;
+  line-height: var(--lh-snug);
+  letter-spacing: -0.03em;
+  color: var(--rcs-text);
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.hud-section-header__rule {
+  flex: 1;
+  align-self: center;
+  min-width: var(--sp-8);
+}
+
+.hud-section-header__caption {
+  margin: var(--sp-3) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-telemetry);
+  text-transform: uppercase;
+  color: var(--rcs-dim);
+}
+
+@media (max-width: 560px) {
+  .hud-section-header__row {
+    flex-wrap: wrap;
+  }
+
+  .hud-section-header__rule {
+    flex-basis: 100%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Grid plane — the mid-depth parallax layer (REQ-016)
+   -------------------------------------------------------------------------- */
+/* The inset is bleed, not decoration: the grid plane parallaxes (TASK-066)
+   and must stay larger than its section by more than the layer's clamp, or
+   translating it walks a hard edge into view. `--sp-14` is 120px against a
+   100px clamp. */
+.hud-grid {
+  position: absolute;
+  inset: calc(var(--sp-14) * -1);
+  z-index: var(--z-grid);
+  pointer-events: none;
+  --grid-step: 56px;
+  --grid-color: var(--rcs-hairline);
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      var(--grid-color) 0,
+      var(--grid-color) var(--hairline),
+      transparent var(--hairline),
+      transparent var(--grid-step)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--grid-color) 0,
+      var(--grid-color) var(--hairline),
+      transparent var(--hairline),
+      transparent var(--grid-step)
+    );
+  opacity: 0.5;
+}
+
+.hud-grid--fine {
+  --grid-step: 32px;
+}
+
+.hud-grid--wide {
+  --grid-step: 96px;
+}
+
+.hud-grid--accent {
+  --grid-color: var(--rcs-accent-hairline);
+}
+
+.hud-grid--mask-radial {
+  mask-image: radial-gradient(ellipse at center, #000 10%, transparent 72%);
+}
+
+.hud-grid--mask-top {
+  mask-image: linear-gradient(to bottom, #000, transparent 70%);
+}
+
+/* --------------------------------------------------------------------------
+   Readout
+   -------------------------------------------------------------------------- */
+.hud-readout {
+  font-family: var(--font-mono);
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.hud-readout--stack {
+  flex-direction: column;
+}
+
+.hud-readout--inline {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.hud-readout__label {
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-telemetry);
+  text-transform: uppercase;
+  color: var(--rcs-dim);
+}
+
+.hud-readout__value {
+  font-size: var(--fs-lead);
+  font-variant-numeric: tabular-nums;
+  color: var(--rcs-text);
+  line-height: 1.1;
+}
+
+.hud-readout__unit {
+  margin-left: var(--sp-1);
+  font-size: var(--fs-caption);
+  color: var(--rcs-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Placeholder — DES-006
+   -------------------------------------------------------------------------- */
+.hud-placeholder {
+  position: relative;
+  display: block;
+  margin: 0;
+  overflow: hidden;
+  /* So the initials can scale off the frame's own width rather than the
+     viewport — these frames appear at several sizes. */
+  container-type: inline-size;
+  background:
+    radial-gradient(
+      ellipse at 50% 35%,
+      color-mix(in srgb, var(--rcs-accent-deep) 22%, transparent),
+      transparent 68%
+    ),
+    var(--rcs-surface);
+  border: var(--hairline) solid var(--rcs-hairline);
+  isolation: isolate;
+}
+
+.hud-placeholder__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hud-placeholder__trace {
+  fill: none;
+  stroke: var(--rcs-hairline-strong);
+  stroke-width: 0.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.hud-placeholder__node {
+  fill: var(--rcs-hairline-strong);
+}
+
+.hud-placeholder__tick {
+  stroke: var(--rcs-hairline);
+  stroke-width: 0.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.hud-placeholder__art .is-accent .hud-placeholder__trace {
+  stroke: var(--rcs-accent);
+}
+
+.hud-placeholder__art .is-accent .hud-placeholder__node {
+  fill: var(--rcs-accent-ice);
+}
+
+.hud-placeholder__initials {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  /* TASK-193 (REQ-151) — the one deliberate exception to the token scale, and
+     it is not an oversight. These initials fill a placeholder tile whose size
+     is set by its grid column, not by the viewport: `cqw` sizes them against
+     the tile, so they stay proportionate whether the tile is a wide exec card
+     or a narrow member cell. A --fs-* step would resolve against the viewport
+     and overflow the small tiles while under-filling the large ones. The
+     glyphs are decorative filler for a missing portrait and carry no reading
+     role, so they sit outside the document scale by design.
+     Recorded in config/tokens.README.md under Exceptions. */
+  font-size: clamp(28px, 18cqw, 64px);
+  letter-spacing: -0.04em;
+  color: var(--rcs-text);
+  opacity: 0.82;
+  z-index: 1;
+}
+
+.hud-placeholder__sweep {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--rcs-accent-ice) 14%, transparent) 48%,
+    color-mix(in srgb, var(--rcs-accent-ice) 22%, transparent) 50%,
+    transparent 100%
+  );
+  transform: translateY(-100%);
+  animation: hudScan 6s var(--ease-in-out) infinite;
+}
+
+@keyframes hudScan {
+  0%,
+  12% {
+    transform: translateY(-100%);
+  }
+  60%,
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.hud-placeholder__corners {
+  position: absolute;
+  inset: var(--sp-2);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.hud-placeholder__corner {
+  position: absolute;
+  width: calc(var(--bracket-len) * 0.8);
+  height: calc(var(--bracket-len) * 0.8);
+  border: 0 solid var(--rcs-text);
+}
+
+.hud-placeholder__corner--tl {
+  top: 0;
+  left: 0;
+  border-top-width: var(--hairline);
+  border-left-width: var(--hairline);
+}
+
+.hud-placeholder__corner--tr {
+  top: 0;
+  right: 0;
+  border-top-width: var(--hairline);
+  border-right-width: var(--hairline);
+}
+
+.hud-placeholder__corner--bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: var(--hairline);
+  border-left-width: var(--hairline);
+}
+
+.hud-placeholder__corner--br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: var(--hairline);
+  border-right-width: var(--hairline);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-placeholder__sweep {
+    animation: none;
+    transform: translateY(46%);
+    opacity: 0.35;
+  }
+}
+
+/* ==========================================================================
+   Section link-out — TASK-155.
+
+   The `→` link a home-page section uses to hand off to the route that
+   carries the whole of what it is previewing. Declared here rather than in
+   one section's sheet because REQ-112 and REQ-130 both need it — the
+   executive sections point at `/team`, and the Events timeline will point at
+   `/events` — and two of these drifting apart would read as a bug.
+   ========================================================================== */
+.section-more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-10);
+  padding: var(--sp-3) var(--sp-5);
+  border: var(--hairline) solid var(--rcs-hairline);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-secondary);
+  font-size: var(--fs-sm);
+  color: var(--rcs-text);
+  text-decoration: none;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.section-more:hover {
+  border-color: var(--rcs-accent-hairline);
+  color: var(--rcs-accent-ice);
+}
+
+/* The arrow, not the label, carries the movement — a whole pill sliding on
+   hover would fight the section's stillness. */
+.section-more__arrow {
+  display: inline-block;
+  color: var(--rcs-accent-text);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.section-more:hover .section-more__arrow {
+  transform: translateX(var(--sp-1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-more__arrow {
+    transition: none;
+  }
+
+  .section-more:hover .section-more__arrow {
+    transform: none;
+  }
+}

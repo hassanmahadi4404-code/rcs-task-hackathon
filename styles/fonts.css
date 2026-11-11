@@ -1,0 +1,50 @@
+/* Self-hosted faces. No third-party font requests — see SEC-001. */
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Variable-Latin.woff2") format("woff2");
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-Variable-Latin.woff2") format("woff2");
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Starter kit: the club site's display face, BubbledotICG-FinePos, is left
+   out because its licence is unconfirmed and this repository is public.
+   `--font-display` falls back to Geist Pixel Circle below, so headings that
+   use it render in a stand-in face here and in the real one on ruetcs.org. */
+
+/* The secondary display face — TASK-205, REQ-156. Section headings and UI
+   labels only; never paragraph text. Fira Sans under SIL OFL 1.1, subset to
+   latin and shipped at the two weights the stylesheets actually request;
+   see docs/FONT-LICENSING.md and public/fonts/FiraSans-OFL.txt. */
+@font-face {
+  font-family: "Fira Sans";
+  src: url("/fonts/FiraSans-Regular-Latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fira Sans";
+  src: url("/fonts/FiraSans-Medium-Latin.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Pixel Circle";
+  src: url("/fonts/GeistPixel-Circle.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

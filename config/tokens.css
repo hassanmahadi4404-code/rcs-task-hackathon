@@ -1,0 +1,438 @@
+/* ==========================================================================
+   RCS design primitive layer — PAT-002, TASK-011.
+
+   Every color, space, radius, hairline, glow, z-index, and type step used
+   anywhere in the site resolves from this file. No component, section
+   stylesheet, or utility class may contain a raw literal (GUD-002).
+
+   Contract and retheming walkthrough: config/tokens.README.md
+   ==========================================================================
+
+   CONTRAST AUDIT — TASK-111, ACC-101 (7:1 target, 4.5:1 hard floor).
+
+   Measured on the live page at 1920px, not calculated from the palette in
+   isolation: every ratio below is `getComputedStyle` colour against the first
+   opaque ancestor background, WCAG 2.x relative luminance. Re-run the sweep
+   after any change to a colour or a ground; the method is in
+   docs/ACCESSIBILITY.md.
+
+   Flat grounds — #000000 (hero), #08090C (sections), #0A0B0F (surface),
+   #101219 (surface-raised, focused inputs only):
+
+     token / role              #000    #08090C  #0A0B0F  #101219
+     --rcs-text     #ffffff    21.0     19.9     19.7     18.7
+     --rcs-muted    #b8b8c0    10.7     10.1      9.98     9.49
+     --rcs-dim      #9c9ca6     7.72     7.32     7.23     6.88 †
+     --rcs-accent-text #8b96ff  7.90     7.49     7.40     7.04
+     --rcs-accent-ice  #a6c8ff 12.33    11.69    11.55    10.98
+     --rcs-error    #ff6b6b     7.57     7.17     7.09     6.74 ‡
+
+     † --rcs-dim reaches 6.88:1 in one place only — placeholder text inside an
+       input on --rcs-surface-raised (focused inputs on the site, every input
+       in the dashboard, issue #21). It clears 7:1 on every other ground.
+       REQ-105 fixes the value, so this is recorded rather than corrected; it
+       is far above the 4.5:1 floor.
+     ‡ --rcs-error renders on the section ground (7.17:1); the raised column
+       is listed for completeness, not because error text lands there.
+
+     --rcs-accent (#4b5bf5) is 3.90:1 and is a chrome colour only — borders,
+     swatches, glows, fills. It never carries text.
+
+   Hero, over the Lightfall canvas: the worst case is not the shader's average
+   but a fully saturated (white) streak pixel crossing the type, so each row
+   below is measured against black-at-scrim-alpha over #ffffff:
+
+     headline  #ffffff            @ 0.62   6.20:1   (80px — AAA large: 4.5)
+     subhead   --hero-subhead     @ 0.80   8.19:1
+     stats     --hero-stat-label  @ 0.92   9.32:1
+
+     The headline is the one item under 7:1. It is 80px display type, where
+     WCAG 1.4.6 asks 4.5:1, and it clears that by 38%. Deepening the scrim
+     further to buy the last 0.8 would put the shader behind a near-opaque
+     black plate and erase the hero's one visual idea — so it stands, per
+     ACC-101's "where practical".
+   ========================================================================== */
+
+:root {
+  /* ------------------------------------------------------------------
+     Color — DES-002. Black-dominant. Accent is capped at ~10% of the
+     visual weight of any given viewport.
+     ------------------------------------------------------------------ */
+  --rcs-bg: #000000;
+  /* TASK-106 (REQ-106) — the ground for every section below the hero. True
+     black is retained on --rcs-bg for the hero, where the Lightfall canvas
+     needs it; near-black here takes the halation off small text. */
+  --rcs-bg-section: #08090c;
+  --rcs-surface: #0a0b0f;
+  --rcs-surface-raised: #101219;
+  --rcs-text: #ffffff;
+  /* TASK-105 (REQ-105) — was #8e8e8e (6.44:1 on --rcs-bg). Compliance was
+     never the problem; headroom was. #b8b8c0 is 10.85:1 on --rcs-bg and
+     10.16:1 on --rcs-bg-section, clearing ACC-101's 7:1 target. */
+  --rcs-muted: #b8b8c0;
+  /* TASK-076, raised in TASK-105 — the quietest text tone the palette allows.
+     Was #5a5a60 (3.06:1, failed ACC-003), then #7a7a82 (4.93:1 on --rcs-bg:
+     passing but effortful). #9c9ca6 is 7.68:1 on --rcs-bg, 7.19:1 on
+     --rcs-bg-section and 7.09:1 on --rcs-surface, the darkest backdrop it
+     lands on — so it now clears ACC-101 on every ground it touches. Do not
+     darken it without re-running the audit in docs/ACCESSIBILITY.md. */
+  --rcs-dim: #9c9ca6;
+  --rcs-hairline: rgba(255, 255, 255, 0.12);
+  --rcs-hairline-strong: rgba(255, 255, 255, 0.24);
+  --rcs-accent: #4b5bf5;
+  /* The accent at text weight. --rcs-accent itself is 3.9:1 and is therefore
+     a chrome colour only: borders, swatches, glows, fills. Anything that
+     renders as readable copy uses this instead.
+     TASK-111 — was #7d8bff, which measured exactly 7.01:1 on --rcs-bg and so
+     fell to 6.65:1 the moment sections moved to --rcs-bg-section. #8b96ff is
+     7.49:1 there and 7.04:1 on --rcs-surface-raised, its darkest ground. */
+  --rcs-accent-text: #8b96ff;
+  --rcs-accent-deep: #5b2e9e;
+  --rcs-accent-ice: #a6c8ff;
+  /* The logo's own accent, from assets/README.md's brand table. It is the one
+     place the brand palette is used as UI rather than as artwork: the ASCII
+     wordmark's interaction tint, where the glyphs under the cursor light up in
+     the mark's own blue instead of the site accent. Decorative only — the
+     canvas is aria-hidden, so this carries no text (ACC-101). */
+  --rcs-accent-logo: #787cfe;
+  --rcs-accent-hairline: rgba(75, 91, 245, 0.38);
+  --rcs-glow: rgba(75, 91, 245, 0.45);
+
+  /* Status colors for HUD data rows (events, form validation). Derived
+     from the palette above — no new hues are introduced. `upcoming` reads
+     as a status word as well as a swatch, so it takes the text-weight
+     accent rather than the chrome one (TASK-076). */
+  --rcs-status-completed: var(--rcs-dim);
+  --rcs-status-upcoming: var(--rcs-accent-text);
+  --rcs-status-planned: var(--rcs-accent-ice);
+  /* Issue #21 — the dashboard's status pills, from the same palette. Live is
+     anything a visitor can see right now (published, current, open, active);
+     draft is work in progress; off is archived, closed, or deactivated. */
+  --rcs-status-live: var(--rcs-accent-ice);
+  --rcs-status-draft: var(--rcs-muted);
+  --rcs-status-off: var(--rcs-dim);
+  --rcs-error: #ff6b6b;
+
+  /* ------------------------------------------------------------------
+     Concept hero variables — DES-005. These values are carried over
+     verbatim from the "Intelligence Designed To Evolve" concept so the
+     hero renders identically. Do not retune them when retheming.
+
+     Type is no longer among them. REQ-151 supersedes DES-005's freeze for
+     `font-size` only: the hero's sizes were the one part of the concept the
+     site kept while the rest of it moved to the token scale, which left two
+     type systems running at once. As of TASK-189 the hero reads --fs-*, like
+     everything else. Colours, geometry, and shadows here are still frozen.
+     ------------------------------------------------------------------ */
+  --bg: var(--rcs-bg);
+  --text: var(--rcs-text);
+  --muted: var(--rcs-muted);
+  --nav-text: #2e2e2e;
+  --pill-dark: #28282a;
+  --sign-in-text: #c8c8c8;
+  --nav-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  --trust-bg: #28282a;
+  --trust-border: rgba(255, 255, 255, 0.4);
+  --trust-text: #c4c2c3;
+  --trust-size: clamp(36px, 4.5vw, 42px);
+  --trust-icon: #111111;
+  --pill-dark-hover: #323234;
+  --burger-bg: #28282a;
+  --sheet-bg: #ffffff;
+  --sheet-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  --overlay-bg: rgba(0, 0, 0, 0.62);
+
+  /* Event covers keep their whole image inside a fixed card frame; the
+     letterbox is a blurred, dimmed copy of the same image. No text sits on
+     it. The modal shows the cover at its natural ratio, capped by height. */
+  --event-cover-blur: 24px;
+  --event-cover-dim: 0.45;
+  --event-cover-max-height: 70vh;
+
+  /* Person cards (team): the narrowest a card gets before the grid drops a
+     column, and the square portrait's side, which shrinks on a phone so the
+     name keeps room beside it. */
+  --person-card-min: 20rem;
+  --person-card-portrait: clamp(5.5rem, 22vw, 7.5rem);
+  /* The studio backdrop behind a photograph. A cut-out portrait (a PNG with
+     no background, as the advisors' are) shows it; an opaque photo covers
+     it. Accent light from above, the deep violet rising from below. */
+  --person-photo-backdrop:
+    radial-gradient(90% 70% at 50% 18%, rgba(75, 91, 245, 0.42), transparent 70%),
+    radial-gradient(120% 80% at 50% 110%, rgba(91, 46, 158, 0.6), transparent 65%),
+    linear-gradient(180deg, #161a36, var(--rcs-surface-raised));
+
+  /* Hero-only values, carried over from the concept (TASK-036). The CTA's
+     three-stop white bloom is the one glow recipe outside --glow-*, because
+     it is white rather than accent-tinted and DES-005 freezes it. */
+  --hero-subhead: #d0d0d0;
+  --hero-cta-bg: #ffffff;
+  --hero-cta-text: #000000;
+  --hero-cta-glow: 0 0 0 1px rgba(255, 255, 255, 0.15),
+    0 0 22px rgba(255, 255, 255, 0.32), 0 0 44px rgba(255, 255, 255, 0.12);
+  --hero-cta-glow-hover: 0 0 0 1px rgba(255, 255, 255, 0.25),
+    0 0 28px rgba(255, 255, 255, 0.45), 0 0 54px rgba(255, 255, 255, 0.22);
+  /*
+     Contrast scrim between the hero background and its content — TASK-048,
+     retuned in TASK-076 (ACC-003).
+
+     The stops are not taste. Sampling Lightfall offline at the live buffer
+     size, across a 60s sweep and three pointer positions, every frame puts
+     pixels at luminance ~0.8 and above behind every text block — the streaks
+     are thin but they cross the type constantly, so the backdrop the scrim
+     has to survive is white, not the shader's average. Each stop is the
+     alpha that keeps the text sitting at that radius above 4.5:1 over a
+     fully saturated pixel:
+
+       0.62 @ 0%    headline, #ffffff        → 6.3:1
+       0.80 @ 55%   subhead, --hero-subhead  → 5.3:1 (was 3.9:1 at 0.55/0.72)
+       0.92 @ 100%  stats, --hero-stat-label → 5.1:1 (with the token below)
+
+     Method and figures: docs/ACCESSIBILITY.md. Lightening any stop reopens
+     the failure — re-run the measurement rather than eyeballing it.
+  */
+  --hero-scrim: radial-gradient(
+    ellipse 90% 70% at 50% 45%,
+    rgba(0, 0, 0, 0.62) 0%,
+    rgba(0, 0, 0, 0.8) 55%,
+    rgba(0, 0, 0, 0.92) 100%
+  );
+  /*
+     The stats footer sits at the scrim's outer edge, over the shader's
+     brightest possible pixel. TASK-076 had to lift this above the old
+     --rcs-muted (#8e8e8e, 3.3:1 there) to clear 4.5:1, giving #9a9aa0 at
+     6.56:1. TASK-105's new --rcs-muted is lighter than that lift was, and
+     measures 9.32:1 over the same worst-case pixel — so the special-case
+     tone has nothing left to do and the stats rejoin the palette.
+  */
+  --hero-stat-label: var(--rcs-muted);
+
+  /* ------------------------------------------------------------------
+     Motion planes — TASK-066, TASK-067, TASK-069.
+
+     Scroll parallax depths live in `config/motion.ts`, because the hook has
+     to attenuate and clamp them. What lives here is everything CSS resolves
+     on its own: the pointer-parallax amplitudes (multiplied against the
+     normalised `--pp-x` / `--pp-y` the hook writes on the hero) and the two
+     ghost tints the decompile transition splits into.
+     ------------------------------------------------------------------ */
+  --pp-amp-headline: 8px;
+  --pp-amp-trust: 5px;
+  --pp-amp-stats: 4px;
+  --pp-ease: var(--dur-slow);
+
+  --fx-ghost-a: var(--rcs-accent-ice);
+  --fx-ghost-b: var(--rcs-accent-deep);
+
+  /* ------------------------------------------------------------------
+     Type — DES-003. The display face is applied only to the hero
+     headline, section index numerals, and stat digits.
+     ------------------------------------------------------------------ */
+  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-display: "BubbledotICG-FinePos", "Geist Pixel Circle", monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  /* TASK-205 (REQ-156, superseding REQ-104) — the secondary display face.
+     Section headings and UI labels only. It must never be applied to
+     paragraph or long-form text; see config/tokens.README.md for the three
+     faces' role split. */
+  --font-secondary: "Fira Sans", var(--font-sans);
+
+  /*
+     TASK-186 … TASK-188 (REQ-148 … REQ-150) — the scale re-tuned, and the
+     single scale on the site: the hero and the header consume these tokens
+     as of TASK-189/TASK-192, so nothing is exempt any more. TASK-104 raised
+     the maxima but left each middle term a bare `vw`, which anchors the ramp
+     at 0px and makes it cross the floor wherever it happens to. --fs-body was
+     still pinned at 14px until ~933px and then climbed to its cap by 1200 — a
+     flat band across every tablet width followed by a rush.
+
+     Every middle term below is `calc(A + B·vw)`, solved so the token leaves
+     its floor at exactly 600px and reaches its cap at exactly 1400px:
+
+         B = (max - min) / 8      (per 1vw, i.e. per 100px of the 800px span)
+         A = min - B · 6
+
+     So the ramp is one continuous line across the widths people actually
+     browse at, and the two clamps only bite outside them.
+
+     --fs-h1 is deliberately untouched (REQ-147): its neighbours grow toward
+     the headline; the headline does not grow with them.
+  */
+  /* Floor 11px, not 10px (REQ-150) — this is the most-used step on the site,
+     and a 10px floor put 10px type in 28 places on a 375px screen. */
+  --fs-micro: clamp(11px, calc(10.25px + 0.125vw), 12px);
+  --fs-caption: clamp(12px, calc(10.5px + 0.25vw), 14px);
+  /* Cap 16px, not 15px (REQ-149). At 14/15 this step and --fs-caption were 7%
+     apart and read as one; --fs-caption is held rather than lowered, because
+     dropping it to 13px would collide with --fs-micro at the other end. The
+     desktop progression is now an even 12 / 14 / 16 / 18. */
+  --fs-sm: clamp(13px, calc(10.75px + 0.375vw), 16px);
+  --fs-body: clamp(14px, calc(11px + 0.5vw), 18px);
+  --fs-lead: clamp(15.5px, calc(11.375px + 0.6875vw), 21px);
+  --fs-h3: clamp(18px, calc(10.5px + 1.25vw), 28px);
+  --fs-h2: clamp(24px, calc(6px + 3vw), 48px);
+  --fs-h1: clamp(28px, 6.2vw, 80px);
+  --fs-index: clamp(20px, calc(12.5px + 1.25vw), 30px);
+  --fs-stat: clamp(22px, calc(13.75px + 1.375vw), 33px);
+
+  /*
+     Issue #21 — the dashboard's denser scale. A working tool reads at a
+     steady size, so these are fixed steps rather than viewport ramps. Hints
+     sit one step under body text, never two. Inputs are 16px below 1024px:
+     anything smaller makes iOS Safari zoom the page on focus.
+  */
+  --fs-admin-micro: 12px;
+  --fs-admin-small: 13px;
+  --fs-admin-body: 15px;
+  --fs-admin-input: 16px;
+  --fs-admin-heading: 17px;
+  --fs-admin-title: clamp(28px, calc(22px + 1vw), 32px);
+  --fs-admin-stat: 28px;
+
+  --lh-tight: 1.05;
+  --lh-snug: 1.25;
+  --lh-body: 1.6;
+  --tracking-wide: 0.08em;
+  /* TASK-108 (REQ-117) — was 0.18em. Telemetry labels now sit a step larger,
+     and at that size 0.18em pulled the words apart into loose letters. */
+  --tracking-telemetry: 0.145em;
+
+  /* ------------------------------------------------------------------
+     Space — a 4px-rooted scale. --sp-1 … --sp-16.
+     ------------------------------------------------------------------ */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+  --sp-8: 40px;
+  --sp-9: 48px;
+  --sp-10: 56px;
+  --sp-11: 64px;
+  --sp-12: 80px;
+  --sp-13: 96px;
+  --sp-14: 120px;
+  --sp-15: 160px;
+  --sp-16: 200px;
+
+  --section-pad-y: clamp(var(--sp-12), 10vh, var(--sp-15));
+  --section-pad-x: clamp(var(--sp-4), 3vw, var(--sp-7));
+
+  /* ------------------------------------------------------------------
+     Header band — TASK-145.
+
+     The header moved out of the hero column and into the shared layout, so
+     its height and inset are no longer the hero stylesheet's private
+     business: `.site-header-mount` positions the band with them, and
+     `.hero-stack` reserves exactly the same space so the hero's three
+     regions land where Round 1 left them. Two rules, one source.
+
+     `--header-h` tracks `.nav-pill` / `.signin-pill` above the mobile
+     breakpoint and the 48px burger below it.
+     ------------------------------------------------------------------ */
+  --header-h: clamp(44px, 5.2vw, 48px);
+  --header-pad-y: clamp(16px, 2.4vh, 28px);
+  --header-pad-x: clamp(14px, 3vw, 32px);
+  /* Total vertical space the band occupies, top of page to its bottom edge. */
+  --header-band-h: calc(var(--header-pad-y) + var(--header-h));
+  --section-max-w: 1180px;
+  /* TASK-107 (REQ-118) — was 68ch. At the new --fs-body the old measure ran
+     past a comfortable line length. */
+  --content-max-w: 62ch;
+
+  /* Issue #21 — the dashboard shell: the desktop sidebar, the mobile bar,
+     and the width a page's content stops growing at. Issue #44: wide enough
+     to fill a 1920px screen beside the sidebar; text keeps its own measure
+     (--content-max-w). */
+  --admin-sidebar-w: 240px;
+  --admin-bar-h: 64px;
+  --admin-main-max-w: 1600px;
+  /* The left column of a form section: its title and description. */
+  --admin-intro-w: 15rem;
+  /* Issue #44: the narrowest a card on the Overview's attention grid gets. */
+  --admin-card-min-w: 20rem;
+  --admin-touch: 44px;
+  /* Issue #31 — a list row's controls: the touch minimum, and 32px with a
+     mouse (below), so rows are denser where nobody taps them. */
+  --admin-control: var(--admin-touch);
+  /* Issue #46 — a row's thumbnail, as tall as its controls so it never
+     makes the row taller. */
+  --admin-thumb: var(--admin-control);
+
+  /* ------------------------------------------------------------------
+     Radii and hairlines. HUD chrome is near-square; only pills round.
+     ------------------------------------------------------------------ */
+  --radius-none: 0px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  --hairline: 1px;
+  --hairline-thin: 0.5px;
+  --hairline-thick: 2px;
+  --bracket-len: clamp(10px, 1.4vw, 18px);
+
+  /* ------------------------------------------------------------------
+     Glow recipes. Three only — do not author ad-hoc shadows.
+     ------------------------------------------------------------------ */
+  --glow-soft: 0 0 24px 0 rgba(75, 91, 245, 0.18);
+  --glow-edge: 0 0 0 1px rgba(75, 91, 245, 0.35), 0 0 18px -4px var(--rcs-glow);
+  --glow-bloom: 0 0 60px -10px rgba(75, 91, 245, 0.55),
+    0 0 140px -40px rgba(91, 46, 158, 0.5);
+
+  /* ------------------------------------------------------------------
+     Z-index ladder. Nothing may invent a value outside this ladder.
+     ------------------------------------------------------------------ */
+  --z-background: 0;
+  --z-grid: 1;
+  --z-scrim: 2;
+  --z-content: 3;
+  --z-chrome: 10;
+  --z-header: 20;
+  --z-overlay: 30;
+  --z-sheet: 40;
+  --z-cursor: 90;
+  --z-preloader: 100;
+
+  /* ------------------------------------------------------------------
+     Motion primitives. Durations and easings are mirrored in
+     config/motion.ts for the TS side; keep the two in sync.
+     ------------------------------------------------------------------ */
+  --dur-instant: 0.12s;
+  --dur-fast: 0.24s;
+  --dur-base: 0.42s;
+  --dur-slow: 0.7s;
+  --dur-slower: 1.1s;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-hud: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/*
+  Below the header's own breakpoint the pills are gone and the 48px burger is
+  the tallest thing in the band. Kept here rather than in chrome.css so the
+  height and the space `.hero-stack` reserves for it can never disagree.
+*/
+@media (max-width: 720px) {
+  :root {
+    --header-h: 48px;
+  }
+}
+
+/* Above the mobile layout no page zooms on focus, so dashboard inputs drop
+   to the body step. */
+@media (min-width: 1024px) {
+  :root {
+    --fs-admin-input: var(--fs-admin-body);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root {
+    --admin-control: 32px;
+  }
+}

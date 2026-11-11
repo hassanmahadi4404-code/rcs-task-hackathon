@@ -1,0 +1,190 @@
+/* ==========================================================================
+   Sub-page shell — TASK-148, ACC-105.
+
+   The opening block every route other than Home shares: back link, eyebrow,
+   `h1`, lede, hairline, telemetry caption. Sub-pages have no hero, so this is
+   what stands between the header band and the first section, and it has to do
+   two jobs at once — clear the band that overlays the top of the page, and
+   set the same instrument-panel tone the home page's sections open with.
+   ========================================================================== */
+
+.page-shell__header {
+  position: relative;
+  z-index: var(--z-content);
+  width: 100%;
+  background-color: var(--rcs-bg);
+  /* The band overlays the page, so its height is cleared here rather than
+     laid out around — same arithmetic as `.hero-stack`, same token. */
+  padding: calc(var(--header-band-h) + var(--sp-12)) var(--section-pad-x)
+    var(--sp-12);
+}
+
+/*
+  The hero sits on true black and the sections on #08090C (TASK-106). A
+  sub-page has no hero, so this header takes that role: it carries the black
+  ground and bridges into the first section the same way.
+*/
+.page-shell__header::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: var(--sp-12);
+  z-index: var(--z-background);
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent 0%, var(--rcs-bg-section) 100%);
+}
+
+.page-shell__header > .section__inner {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+.page-shell__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-7);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  letter-spacing: var(--tracking-telemetry);
+  text-transform: uppercase;
+  color: var(--rcs-muted);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.page-shell__back:hover {
+  color: var(--rcs-accent-ice);
+}
+
+/* `tabIndex={-1}` makes this the skip link's landing point without adding it
+   to the tab order; the outline would otherwise fire on that programmatic
+   focus and read as a stray box around the title (TASK-074). */
+.page-shell__titles:focus {
+  outline: none;
+}
+
+.page-shell__eyebrow {
+  margin: 0 0 var(--sp-4);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-telemetry);
+  text-transform: uppercase;
+  color: var(--rcs-accent-ice);
+}
+
+/* The page's one `h1`. One step down from the hero headline: this titles a
+   page, it does not open the site. */
+.page-shell__title {
+  margin: 0;
+  font-family: var(--font-secondary);
+  font-weight: 500;
+  font-size: var(--fs-h2);
+  line-height: var(--lh-snug);
+  letter-spacing: -0.03em;
+  color: var(--rcs-text);
+  max-width: 20ch;
+}
+
+.page-shell__lede {
+  margin: var(--sp-5) 0 0;
+  font-size: var(--fs-lead);
+  line-height: var(--lh-body);
+  color: var(--rcs-muted);
+  max-width: var(--content-max-w);
+}
+
+.page-shell__rule {
+  margin-top: var(--sp-9);
+}
+
+.page-shell__caption {
+  margin: var(--sp-3) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-telemetry);
+  text-transform: uppercase;
+  color: var(--rcs-dim);
+}
+
+/* --------------------------------------------------------------------------
+   Pending body — the honest empty state a route carries until its content
+   phase lands (CON-104). Deleted with the last `<PagePending />`.
+   -------------------------------------------------------------------------- */
+.page-pending {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  align-items: flex-start;
+  padding: var(--sp-9);
+  border: var(--hairline) dashed var(--rcs-hairline);
+  border-radius: var(--radius-md);
+}
+
+.page-pending__eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-telemetry);
+  text-transform: uppercase;
+  color: var(--rcs-accent-ice);
+}
+
+.page-pending__body {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--rcs-muted);
+  max-width: var(--content-max-w);
+}
+
+/* `/privacy` — issue #20. A read, not a browse: one column at the body
+   measure, an `h2` per topic, the date last. */
+.privacy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-9);
+}
+
+.privacy__block {
+  max-width: var(--content-max-w);
+}
+
+.privacy__heading {
+  margin: 0 0 var(--sp-4);
+  font-family: var(--font-secondary);
+  font-weight: 500;
+  font-size: var(--fs-h3);
+  line-height: var(--lh-snug);
+  color: var(--rcs-text);
+}
+
+.privacy__body {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--rcs-muted);
+}
+
+.privacy__body + .privacy__body,
+.privacy__list + .privacy__body {
+  margin-top: var(--sp-4);
+}
+
+.privacy__list {
+  margin: var(--sp-4) 0 0;
+  padding-left: 1.25em;
+  list-style: disc;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--rcs-muted);
+}
+
+.privacy__updated {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-telemetry);
+  text-transform: uppercase;
+  color: var(--rcs-dim);
+}

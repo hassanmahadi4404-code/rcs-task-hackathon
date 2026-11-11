@@ -1,0 +1,14 @@
+/*
+  Import order matters: Tailwind first, then tokens (every rule below reads
+  them), then faces, base, primitives, chrome, pages, and the dashboard.
+  Starter kit: the home page and visual-effect sheets are left out.
+*/
+
+@import "tailwindcss";
+@import "../config/tokens.css";
+@import "./fonts.css";
+@import "./base.css";
+@import "./hud.css";
+@import "./chrome.css";
+@import "./pages.css";
+@import "./admin.css";
