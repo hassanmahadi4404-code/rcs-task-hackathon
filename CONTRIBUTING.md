@@ -40,7 +40,7 @@ Use only `getViewer()` and `requireViewer()` from `lib/auth.ts`. In SQL, use `pu
 
 ## Rules
 
-- **Do not edit any file the kit shipped.** `npm run kit-check` lists every one you changed. Put your code in your own files: see BRIEF.md, "Rules of the codebase", for the paths.
+- **Do not edit any file the kit shipped.** `npm run kit-check` lists every one you changed. Put your code in your own files: see BRIEF.md, "What cannot change", for the paths.
 - **No literals in components.** Colours, durations, easings and fonts come from `config/`. Copy comes from `content/`. A hardcoded value in a `.tsx` file is a bug.
 - **One scroll loop.** Lenis in `components/chrome/SmoothScroll.tsx` owns the only `requestAnimationFrame` scroll loop. Subscribe to it; never open a second one.
 - **Everything degrades.** Pages stay usable without JavaScript where they can (forms post through server actions), and under `prefers-reduced-motion`.
