@@ -5,11 +5,10 @@ The three best Entries win. Their authors become **Contributors** to ruetcs.org,
 | | |
 |---|---|
 | Who can enter | Any society Member, from any intake. Solo only. |
-| Window | 10 days: **{{START_DATE}}** to **{{DEADLINE}}** (Asia/Dhaka) |
+| Deadline | **Friday 20 November 2026, 23:59** (Asia/Dhaka) |
 | Build in | This Starter kit. Create your own **private** repo from it with **Use this template**. |
-| Submit | Make your repo public, then fill in the [submission form]({{FORM_URL}}) before the deadline. |
-| Questions | [GitHub Discussions]({{DISCUSSIONS_URL}}) on this repo, nowhere else. |
-| Demo day | **{{DEMO_DAY}}**: showcase and winners announced. |
+| Submit | Make your repo public, then fill in the [submission form](https://github.com/ruetcs/task-hackathon-kit/blob/main/FAQ.md#submission-form) before the deadline. |
+| Questions | [This Discussion](https://github.com/ruetcs/task-hackathon-kit/discussions/1) on the kit repo, nowhere else. |
 
 ## The problem
 
@@ -68,21 +67,21 @@ A panel of 2–3 judges scores every Entry that passes the Gate. Each judge scor
 
 ## Submitting
 
-Before **{{DEADLINE}}**:
+Before **Friday 20 November 2026, 23:59** (Asia/Dhaka):
 
 1. Push your final commit.
 2. Fill in `DECISIONS.md`, and link a demo video of **3 minutes or less** from the README (YouTube unlisted or Google Drive, viewable by anyone with the link).
 3. **Make your repo public.**
-4. Fill in the [submission form]({{FORM_URL}}): your name, roll, email, GitHub username, repo URL, the **full 40-character commit SHA**, and the video link.
+4. Fill in the [submission form](https://github.com/ruetcs/task-hackathon-kit/blob/main/FAQ.md#submission-form): your name, roll, email, GitHub username, repo URL, the **full 40-character commit SHA**, and the video link.
 
 Your Entry is the commit whose SHA you submitted. Pushes after the deadline are ignored. A repo that is private when judging starts cannot be scored.
 
 ## Fair play
 
 - Solo work. Entries that share code with each other beyond the kit are disqualified, and commit history is checked.
-- Ask about the Brief only in Discussions. Any answer that changes what the Brief means is added to `FAQ.md`, so everyone has the same information.
+- Ask about the Brief only in [the Discussion](https://github.com/ruetcs/task-hackathon-kit/discussions/1). Any answer that changes what the Brief means is added to the kit repo's [FAQ.md](https://github.com/ruetcs/task-hackathon-kit/blob/main/FAQ.md), so everyone has the same information.
 - The organiser and judges do not enter.
 
 ## If you win
 
-You become a **Contributor** to ruetcs.org with write access to the club site's repo. Your first job, together with the other two winners, is to bring the best of the three Entries into the live site through reviewed pull requests, within about 3 weeks of the announcement. You also get a certificate and a mention on the site.
+You become a **Contributor** to ruetcs.org with write access to the club site's repo. Your first job, together with the other two winners, is to bring the best of the three Entries into the live site through reviewed pull requests, within about 3 weeks. You also get a certificate and a mention on the site.

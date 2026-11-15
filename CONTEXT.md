@@ -5,7 +5,7 @@ A one-off, solo hackathon in which RUET Computing Society members build the task
 ## Hackathon
 
 **Hackathon**:
-The time-boxed competition (a 10-day take-home) in which Candidates build the task platform from the Brief. Its winning code is merged into the club site.
+The time-boxed competition (a take-home with one deadline) in which Candidates build the task platform from the Brief. Its winning code is merged into the club site.
 _Avoid_: Trial, contest, test
 
 **Candidate**:

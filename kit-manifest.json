@@ -1,8 +1,8 @@
 {
   ".env.example": "c1897ea471693ebed3dbe21ce83b3c27f19457d01d8aca715802eca32c1bae4f",
   ".github/workflows/gate.yml": "0a25db89da44b8e4f9ee34cbcd802571610a0f2fa030e46580da7dffac8d84c8",
-  "BRIEF.md": "890ce9cbb2676c8417fbae99723197c9784fabbcc1882cb46bb131fc41229baa",
-  "CONTEXT.md": "1520181f41df2011f4de0c5aefee1a654d099a7e4e66b57f849f26fe4dd1edda",
+  "BRIEF.md": "097bcd7646c886c9c7da25c0322a200278674dad8933bde58c7c0017c2811c7d",
+  "CONTEXT.md": "e8c1e2262218d9746664b00ea2c3370fe84626413481a7503ce926db76a5bfe8",
   "CONTRIBUTING.md": "dffd3b1671b7f2a2a2cd6f301e67d2aec00967e0006010c4003cceec8d3b7e10",
   "app/(site)/layout.tsx": "d5c11d6a9dba76bbbaf7f68ac4f999037dee7e8fb738ed3e6650a71163282390",
   "app/(site)/page.tsx": "72f8704546c8ca2902b6c0874113b840612874b37f26d11464c66c420c326843",
