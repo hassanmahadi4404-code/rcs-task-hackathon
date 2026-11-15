@@ -4,7 +4,7 @@ Answers from [the Discussion](https://github.com/ruetcs/task-hackathon-kit/discu
 
 ## Submission form
 
-{{FORM_URL}}
+**[Open the submission form](https://docs.google.com/forms/d/e/1FAIpQLSdyHu_ASQTiq1z8foDpP1boUqW4kdRp-4kpP9td4F1BX1zpXA/viewform)**
 
 Submit before **Friday 20 November 2026, 23:59** (Asia/Dhaka). See the Brief's "Submitting" section for what to have ready.
 
