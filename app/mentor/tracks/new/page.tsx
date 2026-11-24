@@ -14,7 +14,7 @@ export default async function NewTrackPage() {
   return (
     <>
       <PageHeader title={copy.newTitle} crumbs={[{ label: mentorCopy.tracks.title, href: taskPaths.tracks }]} />
-      <TrackForm initial={{ name: '', description: '', archived: false }} />
+      <TrackForm initial={{ name: '', description: '', archived: false, position: '' }} />
     </>
   );
 }

@@ -12,10 +12,11 @@
 import { cache } from 'react';
 
 import { supabaseServer, type Viewer } from '@/lib/auth';
+import { planOrder } from '@/lib/tasks/mentor';
 import type { EvaluationRow, SessionRow, SubmissionRow, Submitter, TaskRow, TrackRow } from '@/lib/tasks/types';
 
-const TRACK = 'id, name, description, archived';
-const SESSION = 'id, track_id, title, held_on';
+const TRACK = 'id, name, description, archived, position';
+const SESSION = 'id, track_id, title, held_on, topic, position, date_tbc';
 const TASK = 'id, session_id, title, instructions, grading_criteria, deadline, formats, published_at';
 const EVALUATION =
   'submission_id, status, ai_score, ai_feedback, model, override_score, override_note, overridden_by, overridden_at, updated_at, attempts, next_attempt_at, failure_reason, flagged';
@@ -25,6 +26,12 @@ const SUBMISSION = `id, task_id, member_id, body, file_path, file_size, created_
 const one = <T>(value: T | T[] | null | undefined): T | null => (Array.isArray(value) ? (value[0] ?? null) : (value ?? null));
 
 type Joined<T, K extends keyof T> = Omit<T, K> & { [P in K]: unknown };
+
+/** A Session out of a join, without what was joined to it. */
+function sessionRow(row: SessionRow): SessionRow {
+  const { id, track_id, title, held_on, topic, position, date_tbc } = row;
+  return { id, track_id, title, held_on, topic, position, date_tbc };
+}
 
 function submission(row: Joined<SubmissionRow, 'evaluation'>): SubmissionRow {
   return { ...row, evaluation: one(row.evaluation as EvaluationRow | EvaluationRow[] | null) };
@@ -79,7 +86,7 @@ function learnerTask(row: TaskJoin): LearnerTask | null {
   const { session: _session, submissions, ...task } = row;
   return {
     task,
-    session: { id: session.id, track_id: session.track_id, title: session.title, held_on: session.held_on },
+    session: sessionRow(session),
     track,
     submissions: submissions
       .map(submission)
@@ -163,7 +170,7 @@ async function sessionItems(scope: MentorScope, sessionId?: string): Promise<Ses
   let query = supabase
     .from('sessions')
     .select(`${SESSION}, track:tracks(${TRACK}), tasks(${TASK}), session_mentors(email)`)
-    .order('held_on', { ascending: false });
+    .order('held_on');
   if (sessionId) query = query.eq('id', sessionId);
   else if (!scope.isOfficer) query = query.in('id', scope.sessionIds);
   const { data } = await query;
@@ -179,14 +186,15 @@ async function sessionItems(scope: MentorScope, sessionId?: string): Promise<Ses
       : [];
   const submissions = glances.map((row) => ({ ...row, evaluation: one(row.evaluation as EvaluationRow | EvaluationRow[] | null) }));
 
-  return rows.flatMap((row) => {
+  // Placed Sessions in their order, then the unplaced by date (the query's order).
+  return [...rows].sort(planOrder).flatMap((row) => {
     const track = one(row.track);
     if (!track) return [];
-    const { track: _track, tasks, session_mentors, ...session } = row;
+    const { tasks, session_mentors } = row;
     const ids = tasks.map((task) => task.id);
     return [
       {
-        session,
+        session: sessionRow(row),
         track,
         tasks: [...tasks].sort((a, b) => Date.parse(a.deadline) - Date.parse(b.deadline)),
         mentors: session_mentors.map((mentor) => mentor.email).sort(),
@@ -196,7 +204,7 @@ async function sessionItems(scope: MentorScope, sessionId?: string): Promise<Ses
   });
 }
 
-/** The Sessions in this person's scope, newest first, each with its Tasks and a glance at the work. */
+/** The Sessions in this person's scope, in the order they are taught, each with its Tasks and a glance at the work. */
 export function mentorSessions(scope: MentorScope): Promise<SessionItem[]> {
   return sessionItems(scope);
 }
@@ -232,7 +240,7 @@ export async function taskContext(scope: MentorScope, taskId: string): Promise<T
   const { session: _session, ...task } = row;
   return {
     task,
-    session: { id: joined.id, track_id: joined.track_id, title: joined.title, held_on: joined.held_on },
+    session: sessionRow(joined),
     track,
     deadlines: joined.tasks.map((item) => item.deadline),
   };
@@ -292,14 +300,13 @@ export interface TrackItem extends TrackRow {
   sessions: number;
 }
 
-/** Every Track the viewer may read, by name, with how many Sessions it has. */
+/** Every Track the viewer may read, in the order they are taught, with how many Sessions it has. */
 export async function tracks(): Promise<TrackItem[]> {
   const supabase = await supabaseServer();
   const { data } = await supabase.from('tracks').select(`${TRACK}, sessions(id)`).order('name');
-  return ((data ?? []) as unknown as (TrackRow & { sessions: { id: string }[] })[]).map(({ sessions, ...track }) => ({
-    ...track,
-    sessions: sessions.length,
-  }));
+  return ((data ?? []) as unknown as (TrackRow & { sessions: { id: string }[] })[])
+    .map(({ sessions, ...track }) => ({ ...track, sessions: sessions.length }))
+    .sort(planOrder);
 }
 
 export async function trackById(trackId: string): Promise<TrackRow | null> {

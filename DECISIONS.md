@@ -55,6 +55,15 @@ On a local `supabase start` stack the key is derived from the CLI's published de
 - **Tasks can be drafts.** Learners see a Task once it is published, and keep seeing one they handed work in to even if it is later unpublished.
 - **Mentors do not rename or move Sessions, or name other Mentors.** Officers plan Sessions.
 
+## The plan as a timeline
+
+The society plans a whole Track ahead in a spreadsheet: every Session in order, each with its syllabus, its Mentors and, for most of them, no date yet. The Sessions page is that sheet: Tracks in the order they are taught, and under each one its Sessions with Syllabus / Topic, Mentor 1, Mentor 2, Date, and how much work came in. Below 768px each row is a card with the same fields.
+
+- **A Session has a syllabus line and a place in its Track; a Track has a place among the Tracks.** These are three columns added to the core tables. Anything not yet given a place is listed after everything that has one.
+- **A Session can be planned before its date is settled.** `held_on` cannot be empty in the core, so an unsettled Session keeps a placeholder there and a flag beside it; everyone is shown "To be announced" and nothing is timed from the placeholder. Its Mentors can still set its first Task, and from then on the Task's deadline times their window like any other Session.
+- **The sheet's own plan is in `supabase/data/freshers-learning-track.sql`**, to load by hand. It is not in the seed, which is the kit's, and it carries no names or phone numbers: the sheet lists Mentors that way, but here a Mentor is an email an Officer names on the Session's page.
+- **Session coordinators are not modelled.** The sheet has them; they have no part in who may see or change anything, and storing them would mean storing people's names for display only.
+
 ## What an Officer does
 
 Tracks, Sessions and naming Mentors by email, in an "Officers" group of the same dashboard, and everything a Mentor can do on every Session at any time. A Mentor's email is lower-cased when stored, and they are a Mentor from the moment they sign in with it.
@@ -67,7 +76,7 @@ Tracks, Sessions and naming Mentors by email, in an "Officers" group of the same
 - **The four seams are kept.** Every string is in `content/tasks.ts`; every decision is a pure module in `lib/tasks/` with an explicit `now` and a test; components render what was decided; every CSS value is a token.
 - **`/mentor` composes the dashboard's pieces** (`AdminShell`, `PageHeader`, `RowList`, `ListToolbar`, `StatGrid`, `FormSection`, `ActionBar`, `PostButton`), with a handful of extra rules. `/learn` uses `PageShell`, `.section` and the HUD frame and section header. The status pill is shared by both sides so one state has one look.
 - **Identity** is only `getViewer()`, `is_admin()`, `viewer_member_id()` and the JWT email. `viewerAt()` adds a `next` address to the sign-in redirect, so an invited Mentor lands on the page they were sent.
-- **The rules live in the database**: policies, a trigger for handing in, and three functions for the Mentor's half of an Evaluation. `npm run test:db` asks 87 questions as each seed person with only their own session.
+- **The rules live in the database**: policies, a trigger for handing in, and three functions for the Mentor's half of an Evaluation. `npm run test:db` asks 93 questions as each seed person with only their own session.
 - **No new dependency.**
 
 ## Not built, and known limits

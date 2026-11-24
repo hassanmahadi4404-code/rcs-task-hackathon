@@ -35,18 +35,25 @@ function endOfDay(heldOn: string): number {
 
 /**
  * When a Mentor's say over a Session ends: a week after its last deadline,
- * or after the day it is held while it has no Task yet.
+ * or after the day it is held while it has no Task yet. A Session with no
+ * Task and no settled date has not happened, so its window has no end yet
+ * (`Infinity`).
  */
-export function sessionEditUntil(heldOn: string, deadlines: readonly string[]): number {
+export function sessionEditUntil(heldOn: string, deadlines: readonly string[], dateTbc = false): number {
+  if (deadlines.length === 0 && dateTbc) return Number.POSITIVE_INFINITY;
   const last = deadlines.length > 0 ? Math.max(...deadlines.map((d) => Date.parse(d))) : endOfDay(heldOn);
   return last + MENTOR_WINDOW_MS;
 }
 
-/** `upcoming` before the day it is held, `open` while its Mentors may change it, then `closed`. */
-export type SessionPhase = 'upcoming' | 'open' | 'closed';
+/**
+ * `unscheduled` while its date is not settled, `upcoming` before the day it
+ * is held, `open` while its Mentors may change it, then `closed`.
+ */
+export type SessionPhase = 'unscheduled' | 'upcoming' | 'open' | 'closed';
 
-export function sessionPhase(heldOn: string, deadlines: readonly string[], now: number): SessionPhase {
-  if (now > sessionEditUntil(heldOn, deadlines)) return 'closed';
+export function sessionPhase(heldOn: string, deadlines: readonly string[], now: number, dateTbc = false): SessionPhase {
+  if (now > sessionEditUntil(heldOn, deadlines, dateTbc)) return 'closed';
+  if (dateTbc) return 'unscheduled';
   return now < endOfDay(heldOn) - DAY_MS ? 'upcoming' : 'open';
 }
 
@@ -118,4 +125,9 @@ export function localToInstant(value: string): string | null {
 export function instantToLocal(instant: string): string {
   const offsetMs = Number(TIME_ZONE_OFFSET.slice(1, 3)) * 60 * 60 * 1000;
   return new Date(Date.parse(instant) + offsetMs).toISOString().slice(0, 16);
+}
+
+/** Today's date on the society's clock, as a `date` column takes it. */
+export function societyDate(now: number): string {
+  return instantToLocal(new Date(now).toISOString()).slice(0, 10);
 }

@@ -16,7 +16,7 @@ type ErrorKey = keyof typeof copy.errors;
 
 export interface TrackFormProps {
   id?: string;
-  initial: { name: string; description: string; archived: boolean };
+  initial: { name: string; description: string; archived: boolean; position: string };
 }
 
 export default function TrackForm({ id, initial }: TrackFormProps) {
@@ -30,6 +30,7 @@ export default function TrackForm({ id, initial }: TrackFormProps) {
       <FormSection id="track-section" title={copy.section.title} description={copy.section.description}>
         <TextField name="name" label={copy.name} hint={copy.nameHint} error={error('name')} defaultValue={state.values.name ?? initial.name} required maxLength={80} />
         <TextField name="description" label={copy.description} hint={copy.descriptionHint} error={error('description')} defaultValue={state.values.description ?? initial.description} rows={3} maxLength={400} />
+        <TextField name="position" label={copy.position} hint={copy.positionHint} type="number" min={0} max={999} error={error('position')} defaultValue={state.values.position ?? initial.position} />
         {id && (
           <p className="admin-field admin-field--check">
             <input className="admin-field__check" id="field-archived" type="checkbox" name="archived" defaultChecked={again ? state.values.archived === 'on' : initial.archived} aria-describedby="field-archived-hint" />

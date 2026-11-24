@@ -22,7 +22,7 @@ export default async function NewTaskPage({ params }: { params: Promise<{ sessio
   if (!item) notFound();
 
   // The Session's page says why: the window has closed.
-  const until = sessionEditUntil(item.session.held_on, item.tasks.map((task) => task.deadline));
+  const until = sessionEditUntil(item.session.held_on, item.tasks.map((task) => task.deadline), item.session.date_tbc);
   if (!scope.isOfficer && requestNow() > until) redirect(taskPaths.session(item.session.id));
 
   return (

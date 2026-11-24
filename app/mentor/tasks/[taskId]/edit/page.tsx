@@ -21,7 +21,7 @@ export default async function EditTaskPage({ params }: { params: Promise<{ taskI
   const work = isUuid(taskId) ? await mentorTask(scope, taskId) : null;
   if (!work) notFound();
   const { task, session, deadlines, submissions } = work;
-  if (!scope.isOfficer && requestNow() > sessionEditUntil(session.held_on, deadlines)) redirect(taskPaths.task(task.id));
+  if (!scope.isOfficer && requestNow() > sessionEditUntil(session.held_on, deadlines, session.date_tbc)) redirect(taskPaths.task(task.id));
 
   return (
     <>

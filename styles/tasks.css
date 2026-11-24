@@ -690,6 +690,27 @@
   flex: 1 1 var(--task-card-min);
 }
 
+/* The Sessions timeline: a syllabus line is prose and wraps; an email is one
+   long word and must be allowed to break rather than widen the table. */
+.task-topic {
+  display: block;
+  max-width: var(--content-max-w);
+  color: var(--rcs-muted);
+  line-height: var(--lh-body);
+}
+
+/* From 768px the list is a table, and the syllabus is the column worth the
+   room; below it each row is a card, as wide as the screen. */
+@media (min-width: 768px) {
+  .task-topic {
+    min-width: var(--task-card-min);
+  }
+}
+
+.task-email {
+  overflow-wrap: anywhere;
+}
+
 .task-flag {
   max-width: var(--content-max-w);
   padding: var(--sp-4);

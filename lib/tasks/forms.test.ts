@@ -56,20 +56,44 @@ test('Mentors are named by email, one per line, lower-cased and once each', () =
 });
 
 test('a Session form needs a Track, a title and a real date', () => {
-  const good = readSessionForm(form({ track_id: TASK, title: 'Web 04', held_on: '2026-12-01', mentors: 'm@kit.test' }));
-  assert.deepEqual(good, { ok: true, values: { track_id: TASK, title: 'Web 04', held_on: '2026-12-01', mentors: ['m@kit.test'] } });
-  const bad = readSessionForm(form({ track_id: 'web', title: '', held_on: '01/12/2026', mentors: 'nobody' }));
-  assert.deepEqual(errorsOf(bad), { track_id: 'track', title: 'title', held_on: 'heldOn', mentors: 'mentors:nobody' });
+  const good = readSessionForm(
+    form({ track_id: TASK, title: 'S4', topic: ' Databases, auth ', position: '4', held_on: '2026-12-01', mentors: 'm@kit.test' }),
+  );
+  assert.deepEqual(good, {
+    ok: true,
+    values: { track_id: TASK, title: 'S4', topic: 'Databases, auth', position: 4, held_on: '2026-12-01', date_tbc: false, mentors: ['m@kit.test'] },
+  });
+  const bad = readSessionForm(
+    form({ track_id: 'web', title: '', topic: 'x'.repeat(601), position: 'first', held_on: '01/12/2026', mentors: 'nobody' }),
+  );
+  assert.deepEqual(errorsOf(bad), {
+    track_id: 'track',
+    title: 'title',
+    topic: 'topic',
+    position: 'position',
+    held_on: 'heldOn',
+    mentors: 'mentors:nobody',
+  });
+});
+
+test('a Session whose date is not settled may leave the date blank, but not wrong', () => {
+  const blank = readSessionForm(form({ track_id: TASK, title: 'S3', held_on: '', date_tbc: 'on' }));
+  assert.ok(blank.ok && blank.values.date_tbc && blank.values.held_on === '' && blank.values.position === 0);
+  const tentative = readSessionForm(form({ track_id: TASK, title: 'S3', held_on: '2026-12-03', date_tbc: 'on' }));
+  assert.ok(tentative.ok && tentative.values.held_on === '2026-12-03');
+  assert.deepEqual(errorsOf(readSessionForm(form({ track_id: TASK, title: 'S3', held_on: 'soon', date_tbc: 'on' }))), { held_on: 'heldOn' });
+  assert.deepEqual(errorsOf(readSessionForm(form({ track_id: TASK, title: 'S3', held_on: '' }))), { held_on: 'heldOn' });
 });
 
 test('a Track form', () => {
-  assert.deepEqual(readTrackForm(form({ name: ' Web ', description: '', archived: 'on' })), {
+  assert.deepEqual(readTrackForm(form({ name: ' Web ', description: '', archived: 'on', position: '2' })), {
     ok: true,
-    values: { name: 'Web', description: '', archived: true },
+    values: { name: 'Web', description: '', archived: true, position: 2 },
   });
-  assert.deepEqual(errorsOf(readTrackForm(form({ name: '', description: 'x'.repeat(401) }))), {
+  assert.deepEqual(errorsOf(readTrackForm(form({ name: '', description: 'x'.repeat(401), position: '-1' }))), {
     name: 'name',
     description: 'description',
+    position: 'position',
   });
 });
 

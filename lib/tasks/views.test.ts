@@ -3,7 +3,7 @@ import { test } from 'node:test';
 
 import { pendingWhy, pollDelay } from './evaluation-view.ts';
 import { effectiveScore, groupTasks, learnerState, summarise, type AttemptSummary } from './learner.ts';
-import { arrangeRows, latestPerLearner, mentorTaskPhase, needsPerson, overview, reviewRows, reviewState, taskStats } from './mentor.ts';
+import { arrangeRows, latestPerLearner, mentorTaskPhase, needsPerson, overview, planOrder, reviewRows, reviewState, taskStats } from './mentor.ts';
 import type { EvaluationRow } from './types.ts';
 
 const now = Date.parse('2026-11-20T12:00:00Z');
@@ -186,4 +186,15 @@ test('the overview counts what needs a person, and what is due soon', () => {
   assert.deepEqual(mentor.attention, [{ taskId: 't1', title: 'A to-do list', count: 2 }]);
   assert.deepEqual(mentor.deadlines.map((d) => d.taskId), ['t1']);
   assert.equal(overview(sessions, now, true).editable, 2);
+});
+
+test('the plan is in the order it is taught, with anything unplaced after it', () => {
+  const tracks = [
+    { name: 'CP', position: 0 },
+    { name: 'Web', position: 2 },
+    { name: 'Old', position: 0 },
+    { name: 'Foundations', position: 1 },
+  ];
+  // The sort is stable, so the unplaced keep the order they came in.
+  assert.deepEqual([...tracks].sort(planOrder).map((track) => track.name), ['Foundations', 'Web', 'CP', 'Old']);
 });

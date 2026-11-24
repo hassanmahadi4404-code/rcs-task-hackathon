@@ -9,6 +9,7 @@ import {
   instantToLocal,
   lateBy,
   localToInstant,
+  societyDate,
   sessionEditUntil,
   sessionPhase,
   taskPhase,
@@ -44,6 +45,15 @@ test('a Session with no Task counts from the end of the day it is held, in Dhaka
   assert.equal(sessionPhase('2026-11-10', [], at('2026-11-09T18:00:00Z')), 'open');
 });
 
+test('a Session with no settled date and no Task has not started to close', () => {
+  assert.equal(sessionEditUntil('2026-11-10', [], true), Number.POSITIVE_INFINITY);
+  assert.equal(sessionPhase('2020-01-01', [], at('2026-11-20T00:00:00Z'), true), 'unscheduled');
+  // Once it has a Task, the Task's deadline times it like any other Session.
+  const until = sessionEditUntil('2026-11-10', [deadline], true);
+  assert.equal(until, at(deadline) + 7 * DAY_MS);
+  assert.equal(sessionPhase('2026-11-10', [deadline], until + 1, true), 'closed');
+});
+
 test("times are shown on the society's clock", () => {
   assert.equal(formatDateTime(deadline), 'Fri 20 Nov 2026, 23:59');
   assert.equal(formatDate('2026-11-20'), 'Fri 20 Nov 2026');
@@ -64,4 +74,6 @@ test('a deadline typed into the form is Dhaka time', () => {
   assert.equal(instantToLocal('2026-11-20T17:59:00Z'), '2026-11-20T23:59');
   assert.equal(localToInstant('tomorrow'), null);
   assert.equal(localToInstant('2026-13-40T99:99'), null);
+  // 20:30 UTC on the 20th is already the 21st in Dhaka.
+  assert.equal(societyDate(at('2026-11-20T20:30:00Z')), '2026-11-21');
 });

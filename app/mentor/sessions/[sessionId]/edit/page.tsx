@@ -32,7 +32,14 @@ export default async function EditSessionPage({ params }: { params: Promise<{ se
       <SessionForm
         id={item.session.id}
         tracks={options}
-        initial={{ track_id: item.session.track_id, title: item.session.title, held_on: item.session.held_on }}
+        initial={{
+          track_id: item.session.track_id,
+          title: item.session.title,
+          topic: item.session.topic,
+          position: String(item.session.position),
+          held_on: item.session.date_tbc ? '' : item.session.held_on,
+          date_tbc: item.session.date_tbc,
+        }}
         cancelHref={taskPaths.session(item.session.id)}
       />
     </>

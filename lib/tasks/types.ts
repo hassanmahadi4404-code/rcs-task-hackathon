@@ -44,6 +44,8 @@ export interface TrackRow {
   name: string;
   description: string;
   archived: boolean;
+  /** Its place among the Tracks, in the order they are taught. */
+  position: number;
 }
 
 export interface SessionRow {
@@ -51,6 +53,12 @@ export interface SessionRow {
   track_id: string;
   title: string;
   held_on: string;
+  /** What the Session covers. */
+  topic: string;
+  /** Its place in the Track: 1 for the first Session. */
+  position: number;
+  /** The date is not settled; `held_on` is a placeholder nobody is shown. */
+  date_tbc: boolean;
 }
 
 export interface TaskRow {

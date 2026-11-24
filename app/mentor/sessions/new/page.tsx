@@ -21,7 +21,7 @@ export default async function NewSessionPage() {
     <>
       <PageHeader title={copy.newTitle} lede={copy.lede} crumbs={[{ label: mentorCopy.sessions.title, href: taskPaths.sessions }]} />
       {options.length > 0 ? (
-        <SessionForm tracks={options} initial={{ track_id: '', title: '', held_on: '' }} cancelHref={taskPaths.sessions} />
+        <SessionForm tracks={options} initial={{ track_id: '', title: '', topic: '', position: '', held_on: '', date_tbc: false }} cancelHref={taskPaths.sessions} />
       ) : (
         <EmptyState>
           <p>{copy.noTracks}</p>

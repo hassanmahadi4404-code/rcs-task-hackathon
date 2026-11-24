@@ -68,6 +68,14 @@ export interface TrackValues {
   name: string;
   description: string;
   archived: boolean;
+  position: number;
+}
+
+/** A place in an order: a whole number from 0 to 999; blank is 0. Null when it is neither. */
+function readPosition(value: string): number | null {
+  const typedValue = text(value);
+  if (typedValue === '') return 0;
+  return /^\d{1,3}$/.test(typedValue) ? Number(typedValue) : null;
 }
 
 export function readTrackForm(form: FormData): Read<TrackValues> {
@@ -75,14 +83,20 @@ export function readTrackForm(form: FormData): Read<TrackValues> {
   const name = text(field(form, 'name'));
   const description = text(field(form, 'description'));
   if (name.length < 1 || name.length > 80) errors.name = 'name';
+  const position = readPosition(field(form, 'position'));
   if (description.length > 400) errors.description = 'description';
-  return done(errors, { name, description, archived: field(form, 'archived') === 'on' });
+  if (position === null) errors.position = 'position';
+  return done(errors, { name, description, archived: field(form, 'archived') === 'on', position: position ?? 0 });
 }
 
 export interface SessionValues {
   track_id: string;
   title: string;
+  topic: string;
+  position: number;
+  /** Empty when the date is not settled and none was typed; the action fills a placeholder. */
   held_on: string;
+  date_tbc: boolean;
   mentors: string[];
 }
 
@@ -90,13 +104,20 @@ export function readSessionForm(form: FormData): Read<SessionValues> {
   const errors: FieldErrors = {};
   const track_id = field(form, 'track_id');
   const title = text(field(form, 'title'));
+  const topic = text(field(form, 'topic'));
+  const position = readPosition(field(form, 'position'));
   const held_on = field(form, 'held_on');
+  const date_tbc = field(form, 'date_tbc') === 'on';
   const { emails, invalid } = readEmails(field(form, 'mentors'));
+  const dated = /^\d{4}-\d{2}-\d{2}$/.test(held_on) && !Number.isNaN(Date.parse(held_on));
   if (!isUuid(track_id)) errors.track_id = 'track';
   if (title.length < 1 || title.length > 160) errors.title = 'title';
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(held_on) || Number.isNaN(Date.parse(held_on))) errors.held_on = 'heldOn';
+  if (topic.length > 600) errors.topic = 'topic';
+  if (position === null) errors.position = 'position';
+  // A date is needed unless it is marked as not settled; then a blank one is allowed.
+  if (!dated && !(date_tbc && held_on === '')) errors.held_on = 'heldOn';
   if (invalid) errors.mentors = `mentors:${invalid}`;
-  return done(errors, { track_id, title, held_on, mentors: emails });
+  return done(errors, { track_id, title, topic, position: position ?? 0, held_on, date_tbc, mentors: emails });
 }
 
 export interface TaskValues {

@@ -13,6 +13,7 @@ import { redirect } from 'next/navigation';
 import { taskPaths } from '@/content/tasks';
 import { requireViewer, supabaseServer } from '@/lib/auth';
 import { mentorScope, taskContext } from '@/lib/tasks/data';
+import { societyDate } from '@/lib/tasks/deadlines';
 import { isUuid } from '@/lib/tasks/files';
 import {
   readEmail,
@@ -73,13 +74,15 @@ export async function saveSession(_previous: FormState, form: FormData): Promise
   await requireViewer();
   const read = readSessionForm(form);
   if (!read.ok) return refused(form, read.errors);
-  const { mentors, ...session } = read.values;
+  const { mentors, held_on, ...rest } = read.values;
 
   const supabase = await supabaseServer();
   const sessionId = id(form, 'id');
+  // `held_on` cannot be empty in the core. With no date settled, a new Session
+  // takes today's as a placeholder nobody is shown, and an existing one keeps its own.
   const { data, error } = sessionId
-    ? await supabase.from('sessions').update(session).eq('id', sessionId).select('id')
-    : await supabase.from('sessions').insert(session).select('id');
+    ? await supabase.from('sessions').update(held_on ? { ...rest, held_on } : rest).eq('id', sessionId).select('id')
+    : await supabase.from('sessions').insert({ ...rest, held_on: held_on || societyDate(Date.now()) }).select('id');
   const saved = data?.[0]?.id as string | undefined;
   if (error || !saved) return refused(form, { form: 'unknown' });
 

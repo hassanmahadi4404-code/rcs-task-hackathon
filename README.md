@@ -33,8 +33,8 @@ Follow [CONTRIBUTING.md](CONTRIBUTING.md), "Set up locally". The two variables i
 | `CRON_SECRET` | Vercel sends it to the daily sweep at `/api/evaluations/sweep/`; without it the sweep does nothing. |
 
 ```bash
-npm run gate      # lint, tsc, 72 unit tests, build, kit-check
-npm run test:db   # 87 pgTAP checks of the access rules, as each seed person
+npm run gate      # lint, tsc, 75 unit tests, build, kit-check
+npm run test:db   # 93 pgTAP checks of the access rules, as each seed person
 ```
 
 `npm run test:db` needs the seeded local database (`npx supabase db reset`).
@@ -43,8 +43,9 @@ npm run test:db   # 87 pgTAP checks of the access rules, as each seed person
 
 | | |
 |---|---|
-| `supabase/migrations/202611120*` | Columns, policies, the hand-in trigger, the override functions, Storage policies. |
+| `supabase/migrations/2026111[23]*` | Columns, policies, the hand-in trigger, the override functions, Storage policies, and the Session timeline. |
 | `supabase/tests/` | The same rules, tried as each seed person with only their own session. |
+| `supabase/data/` | The society's own plan of Sessions, to load by hand into a local database. Not part of the seed. |
 | `lib/evaluate.ts`, `lib/tasks/evaluator-*.ts` | The evaluator seam: `mock`, `gemini`, `fail`. |
 | `lib/tasks/` | Every decision, as a pure module with a test: deadlines, criteria, redaction, retries, forms, what each side is shown. |
 | `lib/tasks/run-evaluation.ts` | One run of the evaluator for one Submission, and what a failure means. |

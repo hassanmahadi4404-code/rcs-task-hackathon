@@ -67,7 +67,7 @@ export default async function MentorSubmissionPage({ params }: { params: Promise
   const { submission, submitter, task, session, deadlines, attempts } = work;
   const { evaluation } = submission;
   const now = requestNow();
-  const canEdit = scope.isOfficer || now <= sessionEditUntil(session.held_on, deadlines);
+  const canEdit = scope.isOfficer || now <= sessionEditUntil(session.held_on, deadlines, session.date_tbc);
   const late = lateBy(submission.created_at, task.deadline);
   const state = mentorCopy.task.state[reviewState(evaluation)];
   const fileName = submission.file_path ? fileNameOf(submission.file_path) : null;

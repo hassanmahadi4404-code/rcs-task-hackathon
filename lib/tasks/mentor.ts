@@ -175,7 +175,7 @@ export function arrangeRows<T extends Pick<SubmissionRow, 'created_at'>>(
 
 
 export interface OverviewSession {
-  session: { id: string; title: string; held_on: string };
+  session: { id: string; title: string; held_on: string; date_tbc?: boolean };
   tasks: readonly { id: string; title: string; deadline: string; published_at: string | null }[];
   submissions: readonly (Pick<SubmissionRow, 'member_id' | 'created_at' | 'evaluation'> & { task_id: string })[];
 }
@@ -196,7 +196,7 @@ export interface Overview {
 export function overview(items: readonly OverviewSession[], now: number, isOfficer: boolean): Overview {
   const result: Overview = { editable: 0, takingWork: 0, submissions: 0, reading: 0, attention: [], deadlines: [] };
   for (const { session, tasks, submissions } of items) {
-    const until = sessionEditUntil(session.held_on, tasks.map((task) => task.deadline));
+    const until = sessionEditUntil(session.held_on, tasks.map((task) => task.deadline), session.date_tbc);
     if (isOfficer || now <= until) result.editable += 1;
     result.submissions += submissions.length;
 
@@ -217,4 +217,18 @@ export function overview(items: readonly OverviewSession[], now: number, isOffic
   result.attention.sort((a, b) => b.count - a.count);
   result.deadlines.sort((a, b) => Date.parse(a.deadline) - Date.parse(b.deadline));
   return result;
+}
+
+// ---------------------------------------------------------------------------
+// The plan's order
+// ---------------------------------------------------------------------------
+
+/**
+ * Where something sits in the plan. A Track or Session an Officer has given a
+ * place comes in that order; one with no place yet (0) comes after them all.
+ */
+export function planOrder(a: { position: number }, b: { position: number }): number {
+  const place = (position: number) => (position > 0 ? position : Number.POSITIVE_INFINITY);
+  const [first, second] = [place(a.position), place(b.position)];
+  return first === second ? 0 : first - second;
 }

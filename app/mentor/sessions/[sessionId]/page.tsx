@@ -42,10 +42,17 @@ export default async function SessionPage({ params }: Props) {
   const { session, track, tasks, mentors, submissions } = item;
   const now = requestNow();
   const deadlines = tasks.map((task) => task.deadline);
-  const until = sessionEditUntil(session.held_on, deadlines);
+  const until = sessionEditUntil(session.held_on, deadlines, session.date_tbc);
   const canEdit = scope.isOfficer || now <= until;
-  const phase = mentorCopy.sessions.phase[sessionPhase(session.held_on, deadlines, now)];
-  const window = scope.isOfficer ? copy.window.officer : canEdit ? copy.window.mentorOpen : copy.window.mentorClosed;
+  const phase = mentorCopy.sessions.phase[sessionPhase(session.held_on, deadlines, now, session.date_tbc)];
+  // No date and no Task yet: the window has no end to name.
+  const window = !Number.isFinite(until)
+    ? scope.isOfficer
+      ? copy.window.officerUnscheduled
+      : copy.window.mentorUnscheduled
+    : fill(scope.isOfficer ? copy.window.officer : canEdit ? copy.window.mentorOpen : copy.window.mentorClosed, {
+        until: formatDateTime(until),
+      });
 
   return (
     <>
@@ -63,14 +70,22 @@ export default async function SessionPage({ params }: Props) {
         <div className="admin-now">
           <StatusPill tone={phase.tone}>{phase.label}</StatusPill>
           <span className="admin-now__label">{track.name}</span>
-          <span className="admin-now__line">{fill(copy.heldOn, { date: formatDate(session.held_on) })}</span>
+          <span className="admin-now__line">
+            {session.date_tbc ? copy.dateTbc : fill(copy.heldOn, { date: formatDate(session.held_on) })}
+          </span>
           {scope.isOfficer && (
             <Link className="admin-link" href={taskPaths.sessionEdit(session.id)}>
               {copy.edit}
             </Link>
           )}
         </div>
-        <p className="admin-now__line">{fill(window, { until: formatDateTime(until) })}</p>
+        {session.topic && (
+          <div className="task-brief">
+            <h2 className="sr-only">{copy.topic}</h2>
+            <p>{session.topic}</p>
+          </div>
+        )}
+        <p className="admin-now__line">{window}</p>
       </PageHeader>
 
       <ListGroup id="tasks" label={copy.tasks.title} count={tasks.length} note={copy.tasks.note}>

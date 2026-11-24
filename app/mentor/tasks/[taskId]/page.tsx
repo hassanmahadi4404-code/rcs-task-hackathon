@@ -45,7 +45,7 @@ export default async function MentorTaskPage({ params, searchParams }: Props) {
 
   const { task, session, deadlines, submissions, submitters } = work;
   const now = requestNow();
-  const canEdit = scope.isOfficer || now <= sessionEditUntil(session.held_on, deadlines);
+  const canEdit = scope.isOfficer || now <= sessionEditUntil(session.held_on, deadlines, session.date_tbc);
   const phase = mentorCopy.session.tasks.phase[mentorTaskPhase(task, now)];
   const stats = taskStats(latestPerLearner(submissions), task.deadline);
 
