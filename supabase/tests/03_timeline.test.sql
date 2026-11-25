@@ -3,7 +3,7 @@
 -- who may change a Session.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(6);
+select plan(7);
 
 create schema tests;
 create function tests.claims(p_email text) returns text
@@ -53,6 +53,12 @@ reset role;
 select ok(
   public.session_edit_until(tests.session('S9')) < now() + interval '13 days',
   'once it has a Task, the window is a week after that deadline'
+);
+
+-- A Track is upcoming, running or finished: never upcoming and finished at once.
+select throws_ok(
+  $$update public.tracks set upcoming = true, archived = true where name = 'CP'$$,
+  '23514', null, 'a Track has one status'
 );
 
 select * from finish();

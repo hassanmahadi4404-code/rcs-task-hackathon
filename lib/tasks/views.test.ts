@@ -5,7 +5,19 @@ import { pendingWhy, pollDelay } from './evaluation-view.ts';
 import { clockParts, timeLeft, urgency } from './countdown.ts';
 import { rankRows } from './leaderboard.ts';
 import { currentStep, effectiveScore, groupTasks, learnerState, learnerSummary, summarise, type AttemptSummary } from './learner.ts';
-import { arrangeRows, latestPerLearner, mentorTaskPhase, needsPerson, overview, planOrder, reviewRows, reviewState, taskStats } from './mentor.ts';
+import {
+  arrangeRows,
+  latestPerLearner,
+  mentorTaskPhase,
+  needsPerson,
+  overview,
+  planOrder,
+  reviewRows,
+  reviewState,
+  taskStats,
+  trackStatus,
+  trackSwitches,
+} from './mentor.ts';
 import type { EvaluationRow } from './types.ts';
 
 const now = Date.parse('2026-11-20T12:00:00Z');
@@ -244,4 +256,13 @@ test('a Task has three steps, and a Learner is always on one of them', () => {
   assert.equal(currentStep([attempt()]), 4);
   assert.equal(currentStep([attempt({ status: 'failed', aiScore: null })]), 4);
   assert.equal(currentStep([attempt({ status: 'pending', aiScore: null, overridden: true })]), 4);
+});
+
+test('a Track is upcoming, running or finished', () => {
+  assert.equal(trackStatus({ archived: false, upcoming: false }), 'running');
+  assert.equal(trackStatus({ archived: false, upcoming: true }), 'upcoming');
+  assert.equal(trackStatus({ archived: true, upcoming: false }), 'finished');
+  for (const status of ['upcoming', 'running', 'finished'] as const) {
+    assert.equal(trackStatus(trackSwitches(status)), status);
+  }
 });

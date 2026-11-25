@@ -11,6 +11,7 @@
 
 import { localToInstant } from './deadlines.ts';
 import { isUuid } from './files.ts';
+import { TRACK_STATUSES, trackSwitches } from './mentor.ts';
 import { nullable, text } from '../form-values.ts';
 import { FORMATS, MAX_BODY_CHARS, MAX_FILE_BYTES, MAX_NOTE_CHARS, MAX_POSTED_FILE_BYTES, type Format } from './rules.ts';
 
@@ -46,6 +47,11 @@ export function typed(form: FormData): Record<string, string> {
 const done = <T>(errors: FieldErrors, values: T): Read<T> =>
   Object.keys(errors).length > 0 ? { ok: false, errors } : { ok: true, values };
 
+/** One value of a closed set, or null when it is not one of them. */
+function pick<T extends string>(value: string, allowed: readonly T[]): T | null {
+  return (allowed as readonly string[]).includes(value) ? (value as T) : null;
+}
+
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function readEmail(value: string): string | null {
@@ -68,6 +74,7 @@ export interface TrackValues {
   name: string;
   description: string;
   archived: boolean;
+  upcoming: boolean;
   position: number;
 }
 
@@ -85,8 +92,10 @@ export function readTrackForm(form: FormData): Read<TrackValues> {
   if (name.length < 1 || name.length > 80) errors.name = 'name';
   const position = readPosition(field(form, 'position'));
   if (description.length > 400) errors.description = 'description';
+  const status = pick(field(form, 'status'), TRACK_STATUSES);
   if (position === null) errors.position = 'position';
-  return done(errors, { name, description, archived: field(form, 'archived') === 'on', position: position ?? 0 });
+  if (!status) errors.status = 'status';
+  return done(errors, { name, description, ...trackSwitches(status ?? 'running'), position: position ?? 0 });
 }
 
 export interface SessionValues {

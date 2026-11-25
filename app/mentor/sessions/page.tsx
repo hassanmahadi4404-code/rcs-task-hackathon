@@ -9,13 +9,19 @@ import { mentorCopy, taskPaths } from '@/content/tasks';
 import { fill } from '@/lib/admin-payments';
 import { mentorSessions, type SessionItem } from '@/lib/tasks/data';
 import { formatDate, sessionPhase } from '@/lib/tasks/deadlines';
-import { planOrder } from '@/lib/tasks/mentor';
+import { planOrder, trackStatus } from '@/lib/tasks/mentor';
 import { mentorAccess } from '@/lib/tasks/mentor-page';
 import { requestNow } from '@/lib/tasks/now';
 
 const copy = mentorCopy.sessions;
 
 export const metadata: Metadata = { title: copy.title };
+
+/** Said under a Track's name when it is not running; a running Track shows its description. */
+function trackNote(track: { archived: boolean; upcoming: boolean }): string | undefined {
+  const status = trackStatus(track);
+  return status === 'running' ? undefined : copy.trackNote[status];
+}
 
 /**
  * The plan, laid out the way the society keeps it: every Track in the order
@@ -42,7 +48,7 @@ export default async function SessionsPage() {
     id: items[0].track.id,
     label: items[0].track.name,
     count: items.length,
-    note: items[0].track.archived ? copy.archived : items[0].track.description || undefined,
+    note: trackNote(items[0].track) ?? (items[0].track.description || undefined),
     rows: items.map(({ session, tasks, mentors, submissions }) => {
       const deadlines = tasks.map((task) => task.deadline);
       const phase = copy.phase[sessionPhase(session.held_on, deadlines, now, session.date_tbc)];

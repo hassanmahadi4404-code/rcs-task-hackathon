@@ -7,6 +7,7 @@ import RowList, { Row } from '@/components/admin/RowList';
 import StatusPill from '@/components/admin/StatusPill';
 import { mentorCopy, taskPaths } from '@/content/tasks';
 import { tracks } from '@/lib/tasks/data';
+import { trackStatus } from '@/lib/tasks/mentor';
 import { officerAccess } from '@/lib/tasks/mentor-page';
 
 const copy = mentorCopy.tracks;
@@ -32,7 +33,7 @@ export default async function TracksPage() {
       {items.length > 0 ? (
         <RowList label={copy.label} columns={[...copy.columns]} status={copy.status}>
           {items.map((track) => {
-            const state = copy.state[track.archived ? 'archived' : 'active'];
+            const state = copy.state[trackStatus(track)];
             return (
               <Row
                 key={track.id}

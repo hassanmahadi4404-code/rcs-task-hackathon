@@ -43,7 +43,10 @@ export interface TrackRow {
   id: string;
   name: string;
   description: string;
+  /** The core's switch: the Track has finished. */
   archived: boolean;
+  /** Planned, not started. Never true together with `archived`. */
+  upcoming: boolean;
   /** Its place among the Tracks, in the order they are taught. */
   position: number;
 }

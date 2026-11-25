@@ -232,3 +232,22 @@ export function planOrder(a: { position: number }, b: { position: number }): num
   const [first, second] = [place(a.position), place(b.position)];
   return first === second ? 0 : first - second;
 }
+
+// ---------------------------------------------------------------------------
+// A Track's status
+// ---------------------------------------------------------------------------
+
+export const TRACK_STATUSES = ['upcoming', 'running', 'finished'] as const;
+
+/** `upcoming` before it starts, `running` while it is taught, `finished` after. */
+export type TrackStatus = (typeof TRACK_STATUSES)[number];
+
+/** The database keeps two switches (`archived` is the core's); together they are one status. */
+export function trackStatus(track: { archived: boolean; upcoming: boolean }): TrackStatus {
+  if (track.archived) return 'finished';
+  return track.upcoming ? 'upcoming' : 'running';
+}
+
+export function trackSwitches(status: TrackStatus): { archived: boolean; upcoming: boolean } {
+  return { archived: status === 'finished', upcoming: status === 'upcoming' };
+}

@@ -86,14 +86,19 @@ test('a Session whose date is not settled may leave the date blank, but not wron
 });
 
 test('a Track form', () => {
-  assert.deepEqual(readTrackForm(form({ name: ' Web ', description: '', archived: 'on', position: '2' })), {
+  assert.deepEqual(readTrackForm(form({ name: ' Web ', description: '', status: 'finished', position: '2' })), {
     ok: true,
-    values: { name: 'Web', description: '', archived: true, position: 2 },
+    values: { name: 'Web', description: '', archived: true, upcoming: false, position: 2 },
   });
-  assert.deepEqual(errorsOf(readTrackForm(form({ name: '', description: 'x'.repeat(401), position: '-1' }))), {
+  const upcoming = readTrackForm(form({ name: 'App', description: '', status: 'upcoming' }));
+  assert.ok(upcoming.ok && upcoming.values.upcoming && !upcoming.values.archived);
+  const running = readTrackForm(form({ name: 'App', description: '', status: 'running' }));
+  assert.ok(running.ok && !running.values.upcoming && !running.values.archived);
+  assert.deepEqual(errorsOf(readTrackForm(form({ name: '', description: 'x'.repeat(401), position: '-1', status: 'paused' }))), {
     name: 'name',
     description: 'description',
     position: 'position',
+    status: 'status',
   });
 });
 

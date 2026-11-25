@@ -346,7 +346,7 @@ export const mentorCopy = {
     emptyMentor: 'You are not a Mentor of any Session yet. An Officer names a Mentor by email on the Session’s page.',
     emptyOfficer: 'No Sessions yet. Add a Track first, then plan its first Session.',
     emptyTrack: 'No Sessions in this Track yet.',
-    archived: 'Archived Track',
+    trackNote: { upcoming: 'Upcoming Track', finished: 'Finished Track' },
   },
 
   session: {
@@ -600,14 +600,15 @@ export const mentorCopy = {
 
   tracks: {
     title: 'Tracks',
-    lede: 'The standing streams Sessions belong to, such as Web or CP. Archive a Track that has stopped running; its work stays.',
+    lede: 'The standing streams Sessions belong to, such as Web or CP. Mark a Track finished when it has stopped running; its work stays.',
     new: 'New Track',
     label: 'Tracks',
     columns: ['Track', 'About', 'Sessions'],
     status: 'Status',
     state: {
-      active: { label: 'Running', tone: 'live' },
-      archived: { label: 'Archived', tone: 'off' },
+      upcoming: { label: 'Upcoming', tone: 'upcoming' },
+      running: { label: 'Running', tone: 'live' },
+      finished: { label: 'Finished', tone: 'done' },
     } satisfies Record<string, Status>,
     empty: 'No Tracks yet. Add the first one.',
   },
@@ -622,13 +623,14 @@ export const mentorCopy = {
     descriptionHint: 'One sentence, up to 400 characters.',
     position: 'Order',
     positionHint: 'Tracks are listed in the order they are taught: 1 first.',
-    archived: 'Archived',
-    archivedHint: 'An archived Track stays readable but is shown as no longer running.',
+    status: 'Status',
+    statusHint: 'Upcoming before it starts, running while it is taught, finished after. A finished Track stays readable.',
+    statuses: { upcoming: 'Upcoming', running: 'Running', finished: 'Finished' },
     save: 'Save Track',
     danger: {
       title: 'Delete this Track',
       note: 'Only a Track nobody has handed work in to can be deleted. Its Sessions and Tasks go with it.',
-      blocked: 'This Track has Submissions, so it cannot be deleted. Archive it instead.',
+      blocked: 'This Track has Submissions, so it cannot be deleted. Mark it finished instead.',
       delete: 'Delete Track',
       confirm: 'Delete this Track with its Sessions and Tasks? This cannot be undone.',
     },
@@ -636,6 +638,7 @@ export const mentorCopy = {
       name: 'Give the Track a name of up to 80 characters.',
       description: 'Keep the description to 400 characters.',
       position: 'The order is a whole number from 0 to 999.',
+      status: 'Choose upcoming, running or finished.',
       taken: 'Another Track already has that name.',
       unknown: 'The Track could not be saved. Try again.',
     },

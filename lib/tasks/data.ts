@@ -16,7 +16,7 @@ import type { BoardRow } from '@/lib/tasks/leaderboard';
 import { planOrder } from '@/lib/tasks/mentor';
 import type { EvaluationRow, SessionRow, SubmissionRow, Submitter, TaskRow, TrackRow } from '@/lib/tasks/types';
 
-const TRACK = 'id, name, description, archived, position';
+const TRACK = 'id, name, description, archived, upcoming, position';
 const SESSION = 'id, track_id, title, held_on, topic, position, date_tbc';
 const TASK = 'id, session_id, title, instructions, grading_criteria, deadline, formats, published_at';
 const EVALUATION =

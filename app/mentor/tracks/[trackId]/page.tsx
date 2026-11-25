@@ -10,6 +10,7 @@ import { mentorCopy, taskPaths } from '@/content/tasks';
 import { supabaseServer } from '@/lib/auth';
 import { trackById } from '@/lib/tasks/data';
 import { isUuid } from '@/lib/tasks/files';
+import { trackStatus } from '@/lib/tasks/mentor';
 import { officerAccess } from '@/lib/tasks/mentor-page';
 
 const copy = mentorCopy.trackForm;
@@ -28,7 +29,7 @@ export default async function EditTrackPage({ params }: { params: Promise<{ trac
   return (
     <>
       <PageHeader title={copy.editTitle} crumbs={[{ label: mentorCopy.tracks.title, href: taskPaths.tracks }]} />
-      <TrackForm id={track.id} initial={{ name: track.name, description: track.description, archived: track.archived, position: String(track.position) }} />
+      <TrackForm id={track.id} initial={{ name: track.name, description: track.description, status: trackStatus(track), position: String(track.position) }} />
       <ListGroup id="danger" label={copy.danger.title} note={hasWork ? copy.danger.blocked : copy.danger.note}>
         {!hasWork && (
           <div className="admin-actions">

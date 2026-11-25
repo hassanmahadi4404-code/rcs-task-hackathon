@@ -85,7 +85,7 @@ The society plans a whole Track ahead in a spreadsheet: every Session in order, 
 
 ## What an Officer does
 
-Tracks, Sessions and naming Mentors by email, in an "Officers" group of the same dashboard, and everything a Mentor can do on every Session at any time. A Mentor's email is lower-cased when stored, and they are a Mentor from the moment they sign in with it.
+Tracks, Sessions and naming Mentors by email, in an "Officers" group of the same dashboard, and everything a Mentor can do on every Session at any time. A Track is upcoming, running or finished; the core's `archived` switch is "finished", and one more switch beside it is "upcoming". A Mentor's email is lower-cased when stored, and they are a Mentor from the moment they sign in with it.
 
 **Nothing a Learner handed in can be deleted by accident.** A Task, Session or Track that holds Submissions cannot be deleted by anyone through the public key; the page says to unpublish or archive it instead.
 
@@ -95,7 +95,7 @@ Tracks, Sessions and naming Mentors by email, in an "Officers" group of the same
 - **The four seams are kept.** Every string is in `content/tasks.ts`; every decision is a pure module in `lib/tasks/` with an explicit `now` and a test; components render what was decided; every CSS value is a token.
 - **`/mentor` composes the dashboard's pieces** (`AdminShell`, `PageHeader`, `RowList`, `ListToolbar`, `StatGrid`, `FormSection`, `ActionBar`, `PostButton`), with a handful of extra rules. `/learn` uses `PageShell`, `.section` and the HUD frame and section header. The status pill is shared by both sides so one state has one look.
 - **Identity** is only `getViewer()`, `is_admin()`, `viewer_member_id()` and the JWT email. `viewerAt()` adds a `next` address to the sign-in redirect, so an invited Mentor lands on the page they were sent.
-- **The rules live in the database**: policies, a trigger for handing in, and three functions for the Mentor's half of an Evaluation. `npm run test:db` asks 104 questions as each seed person with only their own session.
+- **The rules live in the database**: policies, a trigger for handing in, and three functions for the Mentor's half of an Evaluation. `npm run test:db` asks 105 questions as each seed person with only their own session.
 - **No new dependency.**
 
 ## Not built, and known limits
