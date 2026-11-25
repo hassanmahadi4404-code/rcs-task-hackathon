@@ -1,10 +1,10 @@
-import { runDueEvaluations } from '@/lib/tasks/run-evaluation';
+import { sweepQueue } from '@/lib/tasks/run-evaluation';
 
 /**
- * The sweep: work through Evaluations that are waiting and due, with nobody
- * looking. A waiting Evaluation is also run when its Learner opens the Task
- * or its Mentor asks, so this is the backstop for deadline night, when the
- * AI's free quota runs out and the Learners have gone to bed. `vercel.json`
+ * The sweep: move the queue for the AI with nobody looking. Any visit moves
+ * the line, so this is the backstop for deadline night, when the AI's free
+ * quota runs out and the Learners have gone to bed. It reads at the model's
+ * pace, waiting between slots, until the line is empty or its time is up. `vercel.json`
  * calls it once a day, after the quota has reset; Vercel sends
  * `CRON_SECRET` as a bearer token, and without it this does nothing.
  */
@@ -21,12 +21,6 @@ export async function GET(request: Request): Promise<Response> {
     return new Response(null, { status: 401 });
   }
 
-  const started = Date.now();
-  let ran = 0;
-  while (Date.now() - started < BUDGET_MS) {
-    const batch = await runDueEvaluations();
-    if (batch === 0) break;
-    ran += batch;
-  }
+  const ran = await sweepQueue(BUDGET_MS);
   return Response.json({ ran });
 }

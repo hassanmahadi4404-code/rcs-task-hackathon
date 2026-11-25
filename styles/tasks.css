@@ -802,6 +802,22 @@ body.has-reticle .learn input::file-selector-button {
   border-top: var(--hairline) solid var(--rcs-hairline);
 }
 
+/* A Learner's place in the line for the AI: one number, large. */
+.learn-queue {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.learn-queue__place {
+  font-family: var(--font-mono);
+  font-size: var(--fs-stat);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--rcs-accent-ice);
+}
+
 .learn-score {
   display: flex;
   align-items: baseline;

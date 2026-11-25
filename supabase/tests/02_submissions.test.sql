@@ -2,7 +2,7 @@
 -- every rule the database enforces, tried with the public key's two roles.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(45);
+select plan(43);
 
 create schema tests;
 create function tests.claims(p_email text) returns text
@@ -118,7 +118,7 @@ select throws_ok(
   '42501', 'not_allowed', 'Learner: cannot ask for another read'
 );
 select throws_ok(
-  $$select public.claim_evaluation(tests.submission('learner1@kit.test', 'A to-do list'))$$,
+  $$select public.claim_next_evaluation(0)$$,
   '42501', null, 'Learner: cannot run the server''s side'
 );
 select throws_ok(
@@ -249,18 +249,6 @@ select throws_ok(
   $$insert into public.submissions (task_id, member_id, body)
     values (tests.task('A to-do list'), tests.member('learner1@kit.test'), 'for them')$$,
   '42501', 'not_a_member', 'Officer: cannot hand in for a Learner'
-);
-reset role;
-
--- The server's service role runs the evaluator ------------------------------------------
-set local role service_role;
-select ok(
-  public.claim_evaluation(tests.submission('mentor-member@kit.test', 'A to-do list')),
-  'server: takes a waiting Evaluation'
-);
-select ok(
-  not public.claim_evaluation(tests.submission('mentor-member@kit.test', 'A to-do list')),
-  'server: but not one that is already being run'
 );
 reset role;
 

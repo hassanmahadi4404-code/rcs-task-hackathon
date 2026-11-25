@@ -10,7 +10,7 @@ import { learnCopy, taskPaths } from '@/content/tasks';
 import { requireViewer, supabaseServer } from '@/lib/auth';
 import { isUuid, submissionPath } from '@/lib/tasks/files';
 import { readSubmissionForm } from '@/lib/tasks/forms';
-import { runEvaluation } from '@/lib/tasks/run-evaluation';
+import { drainQueue } from '@/lib/tasks/run-evaluation';
 
 export type SubmitError = keyof typeof learnCopy.errors;
 
@@ -100,7 +100,9 @@ export async function submitWork(_previous: SubmitState, form: FormData): Promis
   }
   if (!submissionId) return fail(refusal(saved.error?.message));
 
-  const firstRead = runEvaluation(submissionId);
+  // Move the line. If this Submission is near the front it is read now; if not,
+  // whoever is in front is, and this one's turn comes sooner for it.
+  const firstRead = drainQueue();
   after(() => firstRead);
   await Promise.race([firstRead, new Promise((resolve) => setTimeout(resolve, FIRST_READ_WAIT_MS))]);
 
@@ -110,9 +112,11 @@ export async function submitWork(_previous: SubmitState, form: FormData): Promis
 }
 
 /**
- * Look again at an Evaluation that has not finished, and run it if it is due.
- * Anyone who may read the Submission may ask; asking early or often changes
- * nothing, because a run has to be claimed in the database first.
+ * Look again at an Evaluation that has not finished, and move the line while
+ * here. It reads whoever is at the front, which may not be the one asking:
+ * that is what carries along a Learner who closed the tab. Anyone who may read
+ * the Submission may ask; asking early or often changes nothing, because the
+ * database gives out one run per slot.
  */
 export async function checkEvaluation(submissionId: string): Promise<void> {
   await requireViewer();
@@ -120,7 +124,7 @@ export async function checkEvaluation(submissionId: string): Promise<void> {
   const supabase = await supabaseServer();
   const { data } = await supabase.from('submissions').select('task_id').eq('id', submissionId).maybeSingle();
   if (!data) return;
-  await runEvaluation(submissionId);
+  await drainQueue({ max: 1 });
   revalidatePath(taskPaths.learnTask(data.task_id as string));
 }
 

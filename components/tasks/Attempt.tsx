@@ -9,6 +9,7 @@ import { learnCopy, taskPaths } from '@/content/tasks';
 import { fill } from '@/lib/admin-payments';
 import { formatDateTime, formatSpan, lateBy } from '@/lib/tasks/deadlines';
 import { fileKind, fileNameOf, formatBytes } from '@/lib/tasks/files';
+import type { QueueEstimate } from '@/lib/tasks/queue';
 import type { SubmissionRow } from '@/lib/tasks/types';
 
 const copy = learnCopy.attempt;
@@ -21,9 +22,11 @@ export interface AttemptProps {
   now: number;
   /** The heading level under the section's `h2`. */
   heading: 'h3' | 'h4';
+  /** Where it is in the line for the AI, while it waits. */
+  queue?: QueueEstimate;
 }
 
-export default function Attempt({ submission, number, deadline, now, heading: Heading }: AttemptProps) {
+export default function Attempt({ submission, number, deadline, now, heading: Heading, queue }: AttemptProps) {
   const late = lateBy(submission.created_at, deadline);
   const fileName = submission.file_path ? fileNameOf(submission.file_path) : null;
 
@@ -58,7 +61,9 @@ export default function Attempt({ submission, number, deadline, now, heading: He
         </div>
       )}
 
-      {submission.evaluation && <EvaluationCard evaluation={submission.evaluation} submissionId={submission.id} now={now} />}
+      {submission.evaluation && (
+        <EvaluationCard evaluation={submission.evaluation} submissionId={submission.id} now={now} queue={queue} />
+      )}
     </article>
   );
 }

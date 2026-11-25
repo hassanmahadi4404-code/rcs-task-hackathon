@@ -122,6 +122,10 @@ test('what a Mentor needs to look at', () => {
   assert.equal(reviewState(evaluation({ status: 'failed', override_score: 50 })), 'changed');
   assert.equal(reviewState(evaluation({ flagged: true, override_note: 'I read it' })), 'changed');
   assert.equal(reviewState(null), 'reading');
+  // An older attempt set aside for a newer one is nobody's problem.
+  const skipped = reviewState(evaluation({ status: 'failed', failure_reason: 'superseded' }));
+  assert.equal(skipped, 'skipped');
+  assert.equal(needsPerson(skipped), false);
   assert.deepEqual(['failed', 'flagged', 'read', 'changed', 'reading'].map((s) => needsPerson(s as never)), [true, true, false, false, false]);
 });
 

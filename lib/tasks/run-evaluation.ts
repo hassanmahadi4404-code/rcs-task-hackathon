@@ -1,11 +1,19 @@
 /**
- * Running the evaluator for one Submission, and living with what happens.
+ * Moving the queue for the AI, one Submission at a time.
  *
- * The Submission is already saved before this is ever called, so nothing here
- * can lose a Learner's work: the worst outcome is feedback that arrives
- * later, or an Evaluation left `failed` for the Mentor. One run:
+ * A Submission is saved before any of this runs, so nothing here can lose a
+ * Learner's work: the worst outcome is feedback that arrives later, or an
+ * Evaluation left `failed` for the Mentor.
  *
- *   1. claim the Evaluation, so two requests never read the same work;
+ * The line and its pace live in the database (`claim_next_evaluation`):
+ * oldest first, one request per slot, however many visitors arrive at once.
+ * Every visit moves it. Handing in, a waiting Learner's page looking again,
+ * a Mentor's button and the daily sweep all call `drainQueue`, which reads
+ * whoever is at the front, not whoever is asking; so a Learner who closed
+ * the tab is carried along by everyone else.
+ *
+ * One run:
+ *   1. the database hands over the Submission at the front, if a slot is free;
  *   2. load the work, take personal data out (`prepare.ts`);
  *   3. `evaluate()`, under a time limit;
  *   4. check the result (`result.ts`) and store it; or
@@ -14,9 +22,12 @@
  * Server only: it uses the service role (`service.ts`).
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 import { evaluate } from '@/lib/evaluate';
 import { EvaluatorError, failureOf } from '@/lib/tasks/evaluator-error';
 import { fileNameOf } from '@/lib/tasks/files';
+import { evaluatorPaceMs } from '@/lib/tasks/pace';
 import { prepareSubmission } from '@/lib/tasks/prepare';
 import { checkResult } from '@/lib/tasks/result';
 import { afterFailure } from '@/lib/tasks/retry';
@@ -24,9 +35,6 @@ import { serviceClient } from '@/lib/tasks/service';
 
 /** Longer than any evaluator's own limit; the claim's lock outlasts it. */
 const RUN_TIMEOUT_MS = 40_000;
-
-/** How many waiting Evaluations one request works through. */
-const BATCH = 10;
 
 interface Work {
   body: string | null;
@@ -54,14 +62,8 @@ function within<T>(promise: Promise<T>, ms: number): Promise<T> {
 
 const one = <T>(value: T | T[] | null): T | null => (Array.isArray(value) ? (value[0] ?? null) : value);
 
-/** Run the evaluator for a Submission if its Evaluation is waiting and due. Never throws. */
-export async function runEvaluation(submissionId: string): Promise<void> {
-  const db = serviceClient();
-  if (!db) return;
-
-  const claim = await db.rpc('claim_evaluation', { p_submission: submissionId });
-  if (claim.data !== true) return;
-
+/** Run the evaluator for a Submission the database has just handed over. Never throws. */
+async function runClaimed(db: SupabaseClient, submissionId: string): Promise<void> {
   let attempts = 1;
   let submittedAt = Date.now();
   try {
@@ -142,14 +144,75 @@ export async function runEvaluation(submissionId: string): Promise<void> {
 }
 
 /**
- * Work through Evaluations that are waiting and due, oldest first, one at a
- * time so a free quota is not spent in a burst. `taskId` keeps to one Task.
+ * Read the Submission at the front of the line, if there is one and a slot is
+ * free. False when nothing was read. `taskId` keeps to one Task's line.
  */
-export async function runDueEvaluations(taskId: string | null = null): Promise<number> {
+export async function runNextEvaluation(taskId: string | null = null): Promise<boolean> {
+  const db = serviceClient();
+  if (!db) return false;
+  const claim = await db.rpc('claim_next_evaluation', { p_interval_ms: evaluatorPaceMs(), p_task: taskId });
+  if (typeof claim.data !== 'string') return false;
+  await runClaimed(db, claim.data);
+  return true;
+}
+
+export interface DrainOptions {
+  /** The most Submissions one call reads. */
+  max?: number;
+  /** Stop starting new runs after this long. */
+  budgetMs?: number;
+  taskId?: string | null;
+}
+
+/**
+ * Move the line as far as it will go right now. With a paced evaluator that
+ * is one Submission per call, because the next slot is seconds away; with the
+ * mock it is up to `max`. Returns how many were read.
+ */
+export async function drainQueue({ max = 3, budgetMs = 20_000, taskId = null }: DrainOptions = {}): Promise<number> {
+  const started = Date.now();
+  let read = 0;
+  while (read < max && Date.now() - started < budgetMs) {
+    if (!(await runNextEvaluation(taskId))) break;
+    read += 1;
+  }
+  return read;
+}
+
+/** How long until the line can move again; null when nothing is waiting. */
+async function untilNextSlot(db: SupabaseClient): Promise<number | null> {
+  const now = Date.now();
+  const [waiting, state] = await Promise.all([
+    db.from('evaluations').select('submission_id').eq('status', 'pending').lte('next_attempt_at', new Date(now).toISOString()).limit(1),
+    db.from('evaluator_state').select('next_slot_at, paused_until').eq('id', true).maybeSingle(),
+  ]);
+  if (!waiting.data?.length || !state.data) return null;
+  const slot = Date.parse(state.data.next_slot_at as string);
+  const paused = state.data.paused_until ? Date.parse(state.data.paused_until as string) : 0;
+  return Math.max(SLOT_SLACK_MS, Math.max(slot, paused) - now + SLOT_SLACK_MS);
+}
+
+/** A little past the slot, so the clocks of the server and the database need not agree to the millisecond. */
+const SLOT_SLACK_MS = 250;
+
+/**
+ * For the sweep, which has time and nobody waiting on it: keep reading, and
+ * between slots wait for the next one, until the line is empty or `budgetMs`
+ * is spent. Returns how many were read.
+ */
+export async function sweepQueue(budgetMs: number): Promise<number> {
   const db = serviceClient();
   if (!db) return 0;
-  const due = await db.rpc('due_evaluations', { p_limit: BATCH, p_task: taskId });
-  const ids = Array.isArray(due.data) ? (due.data as string[]) : [];
-  for (const id of ids) await runEvaluation(id);
-  return ids.length;
+  const started = Date.now();
+  let read = 0;
+  while (Date.now() - started < budgetMs) {
+    if (await runNextEvaluation()) {
+      read += 1;
+      continue;
+    }
+    const wait = await untilNextSlot(db);
+    if (wait === null || Date.now() - started + wait >= budgetMs) break;
+    await new Promise((resolve) => setTimeout(resolve, wait));
+  }
+  return read;
 }

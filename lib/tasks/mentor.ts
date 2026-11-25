@@ -15,14 +15,18 @@ import type { EvaluationRow, SubmissionRow } from './types.ts';
  * - `flagged`: the AI read it, but it reads like an attempt to steer the AI.
  * - `reading`: the AI has not finished.
  * - `read`: the AI's Evaluation stands.
+ * - `skipped`: an older attempt the AI was never asked to read, because the
+ *   Learner sent a newer one first. Nothing to do.
  */
-export type ReviewState = 'changed' | 'failed' | 'flagged' | 'reading' | 'read';
+export type ReviewState = 'changed' | 'failed' | 'flagged' | 'reading' | 'read' | 'skipped';
 
-type Reviewed = Pick<EvaluationRow, 'status' | 'override_score' | 'override_note' | 'flagged'>;
+type Reviewed = Pick<EvaluationRow, 'status' | 'override_score' | 'override_note' | 'flagged'> &
+  Partial<Pick<EvaluationRow, 'failure_reason'>>;
 
 export function reviewState(evaluation: Reviewed | null): ReviewState {
   if (!evaluation) return 'reading';
   if (evaluation.override_score !== null || evaluation.override_note !== null) return 'changed';
+  if (evaluation.status === 'failed' && evaluation.failure_reason === 'superseded') return 'skipped';
   if (evaluation.status === 'failed') return 'failed';
   if (evaluation.flagged) return 'flagged';
   return evaluation.status === 'pending' ? 'reading' : 'read';

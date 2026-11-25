@@ -14,6 +14,7 @@ import { cache } from 'react';
 import { supabaseServer, type Viewer } from '@/lib/auth';
 import type { BoardRow } from '@/lib/tasks/leaderboard';
 import { planOrder } from '@/lib/tasks/mentor';
+import type { QueueState } from '@/lib/tasks/queue';
 import type { EvaluationRow, SessionRow, SubmissionRow, Submitter, TaskRow, TrackRow } from '@/lib/tasks/types';
 
 const TRACK = 'id, name, description, archived, upcoming, position';
@@ -135,6 +136,13 @@ export async function learnerTaskById(
   return { ...item, mentored: mentored.includes(item.task.session_id) };
 }
 
+/** How long the line for the AI is in front of a Submission the viewer may read; null otherwise. */
+export async function queueFor(submissionId: string): Promise<QueueState | null> {
+  const supabase = await supabaseServer();
+  const { data } = await supabase.rpc('evaluation_queue', { p_submission: submissionId });
+  return ((data ?? []) as QueueState[])[0] ?? null;
+}
+
 /** A Submission the viewer may read, with only what a download needs. */
 export async function submissionFile(submissionId: string): Promise<{ file_path: string | null; task_id: string } | null> {
   const supabase = await supabaseServer();
@@ -149,7 +157,8 @@ export async function submissionFile(submissionId: string): Promise<{ file_path:
 /** A Submission, as much as a count or a pill needs. */
 export type SubmissionGlance = Pick<SubmissionRow, 'id' | 'task_id' | 'member_id' | 'created_at' | 'evaluation'>;
 
-const GLANCE = 'id, task_id, member_id, created_at, evaluation:evaluations(status, ai_score, override_score, override_note, flagged)';
+const GLANCE =
+  'id, task_id, member_id, created_at, evaluation:evaluations(status, ai_score, override_score, override_note, flagged, failure_reason)';
 
 export interface SessionItem {
   session: SessionRow;

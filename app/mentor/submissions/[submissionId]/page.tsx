@@ -36,7 +36,13 @@ function AiRead({ evaluation, now }: { evaluation: EvaluationRow; now: number })
     const reason = evaluation.failure_reason;
     return (
       <p className="admin-now__line">
-        {reason === 'unreadable' ? copy.ai.failed.unreadable : reason === 'quota' ? copy.ai.failed.quota : fill(copy.ai.failed.default, { n: String(evaluation.attempts) })}
+        {reason === 'superseded'
+          ? copy.ai.failed.superseded
+          : reason === 'unreadable'
+            ? copy.ai.failed.unreadable
+            : reason === 'quota'
+              ? copy.ai.failed.quota
+              : fill(copy.ai.failed.default, { n: String(evaluation.attempts) })}
       </p>
     );
   }

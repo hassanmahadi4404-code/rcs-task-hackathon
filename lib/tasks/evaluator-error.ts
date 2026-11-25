@@ -7,7 +7,7 @@
  * No `@/` imports: Node's test runner executes this file directly.
  */
 
-export const FAILURE_REASONS = ['quota', 'timeout', 'invalid_output', 'unreadable', 'unavailable'] as const;
+export const FAILURE_REASONS = ['quota', 'timeout', 'invalid_output', 'unreadable', 'unavailable', 'superseded'] as const;
 
 /**
  * - `quota`: the model's free quota is used up for now.
@@ -15,6 +15,8 @@ export const FAILURE_REASONS = ['quota', 'timeout', 'invalid_output', 'unreadabl
  * - `invalid_output`: it answered, but not with marks that can be trusted.
  * - `unreadable`: there is nothing in the Submission an AI can read.
  * - `unavailable`: anything else: the network, a server error, a missing key.
+ * - `superseded`: never an evaluator's failure. The database sets it on an
+ *   attempt the AI was not asked to read, because a newer one arrived first.
  */
 export type FailureReason = (typeof FAILURE_REASONS)[number];
 

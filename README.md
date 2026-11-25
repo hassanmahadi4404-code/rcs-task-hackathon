@@ -30,11 +30,12 @@ Follow [CONTRIBUTING.md](CONTRIBUTING.md), "Set up locally". The two variables i
 |---|---|
 | `SUPABASE_SERVICE_ROLE_KEY` | Lets the server write the AI's score, which no signed-in person may do. On a local `supabase start` stack it is worked out for you; **a deployment must set it** (`npx supabase status -o env` prints it locally). DECISIONS.md, "The service-role key". |
 | `GEMINI_MODEL` | Overrides the Gemini model used when `EVALUATOR=gemini`. |
+| `GEMINI_PER_MINUTE` | How many requests a minute the queue sends to Gemini. 10 unless set; raise it on a paid plan. |
 | `CRON_SECRET` | Vercel sends it to the daily sweep at `/api/evaluations/sweep/`; without it the sweep does nothing. |
 
 ```bash
-npm run gate      # lint, tsc, 81 unit tests, build, kit-check
-npm run test:db   # 105 pgTAP checks of the access rules, as each seed person
+npm run gate      # lint, tsc, 85 unit tests, build, kit-check
+npm run test:db   # 118 pgTAP checks of the access rules, as each seed person
 ```
 
 `npm run test:db` needs the seeded local database (`npx supabase db reset`).
@@ -43,12 +44,12 @@ npm run test:db   # 105 pgTAP checks of the access rules, as each seed person
 
 | | |
 |---|---|
-| `supabase/migrations/2026111[2-5]*` | Columns, policies, the hand-in trigger, the override functions, Storage policies, the Session timeline, the leaderboard and Track status. |
+| `supabase/migrations/2026111[2-6]*` | Columns, policies, the hand-in trigger, the override functions, Storage policies, the Session timeline, the leaderboard, Track status and the queue for the AI. |
 | `supabase/tests/` | The same rules, tried as each seed person with only their own session. |
 | `supabase/data/` | The society's own plan of Sessions, to load by hand into a local database. Not part of the seed. |
 | `lib/evaluate.ts`, `lib/tasks/evaluator-*.ts` | The evaluator seam: `mock`, `gemini`, `fail`. |
 | `lib/tasks/` | Every decision, as a pure module with a test: deadlines, criteria, redaction, retries, forms, what each side is shown. |
-| `lib/tasks/run-evaluation.ts` | One run of the evaluator for one Submission, and what a failure means. |
+| `lib/tasks/run-evaluation.ts` | Moving the queue for the AI: one run of the evaluator for the Submission at the front, and what a failure means. |
 | `content/tasks.ts` | Every string. |
 | `app/(site)/learn/`, `app/mentor/` | The two areas. |
 | `components/tasks/`, `styles/tasks.css` | The pieces the kit did not have. |

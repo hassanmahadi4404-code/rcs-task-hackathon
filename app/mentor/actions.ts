@@ -24,7 +24,7 @@ import {
   typed,
   type FormState,
 } from '@/lib/tasks/forms';
-import { runDueEvaluations, runEvaluation } from '@/lib/tasks/run-evaluation';
+import { drainQueue } from '@/lib/tasks/run-evaluation';
 
 const UNIQUE = '23505';
 
@@ -219,7 +219,8 @@ export async function rerunEvaluation(form: FormData): Promise<void> {
   if (!submissionId) return;
   const supabase = await supabaseServer();
   const { error } = await supabase.rpc('request_reevaluation', { p_submission: submissionId });
-  if (!error) await runEvaluation(submissionId);
+  // It goes back in the line by when it was submitted, so it is usually at the front.
+  if (!error) await drainQueue({ max: 1 });
   revalidatePath(taskPaths.submission(submissionId));
 }
 
@@ -230,6 +231,6 @@ export async function runWaiting(form: FormData): Promise<void> {
   if (!taskId) return;
   // Only someone who can see the Task's work gets to spend quota on it.
   if (!(await taskContext(await mentorScope(viewer), taskId))) return;
-  await runDueEvaluations(taskId);
+  await drainQueue({ taskId, max: 5 });
   revalidatePath(taskPaths.task(taskId));
 }

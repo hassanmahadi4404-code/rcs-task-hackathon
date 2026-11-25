@@ -12,7 +12,8 @@ import FeedbackList from '@/components/tasks/FeedbackList';
 import { learnCopy } from '@/content/tasks';
 import { fill } from '@/lib/admin-payments';
 import { formatDateTime, formatRelative } from '@/lib/tasks/deadlines';
-import { pendingWhy } from '@/lib/tasks/evaluation-view';
+import { pendingWhy, pollDelay } from '@/lib/tasks/evaluation-view';
+import { queuePollDelay, waitParts, type QueueEstimate } from '@/lib/tasks/queue';
 import { MAX_RUNS } from '@/lib/tasks/retry';
 import type { EvaluationRow } from '@/lib/tasks/types';
 
@@ -45,20 +46,51 @@ function MentorWord({ evaluation }: { evaluation: EvaluationRow }) {
   );
 }
 
-function Pending({ evaluation, submissionId, now }: { evaluation: EvaluationRow; submissionId: string; now: number }) {
+function waitText(ms: number): string {
+  const wait = waitParts(ms);
+  if (wait.unit === 'moments') return copy.wait.moments;
+  if (wait.unit === 'seconds') return fill(copy.wait.seconds, { n: String(wait.n) });
+  if (wait.unit === 'minutes') return wait.n === 1 ? copy.wait.minute : fill(copy.wait.minutes, { n: String(wait.n) });
+  return wait.n === 1 ? copy.wait.hour : fill(copy.wait.hours, { n: String(wait.n) });
+}
+
+function Pending({
+  evaluation,
+  submissionId,
+  now,
+  queue,
+}: {
+  evaluation: EvaluationRow;
+  submissionId: string;
+  now: number;
+  queue?: QueueEstimate;
+}) {
   const why = pendingWhy(evaluation, now);
   const when = formatRelative(Math.max(Date.parse(evaluation.next_attempt_at), now + 1000), now);
-  const line = {
-    first: copy.pendingFirst,
-    retry: fill(copy.pendingRetry, { n: String(evaluation.attempts), max: String(MAX_RUNS), when }),
-    quota: fill(copy.pendingQuota, { when }),
-    stalled: copy.pendingStalled,
-  }[why];
+  // A run that failed says so. Otherwise the line decides what there is to say:
+  // at the front the work is being read; behind it, the Learner is told their place.
+  const inLine = why !== 'retry' && queue !== undefined && (queue.paused || queue.position > 1);
+  let line: string = copy.pendingFirst;
+  if (why === 'retry') line = fill(copy.pendingRetry, { n: String(evaluation.attempts), max: String(MAX_RUNS), when });
+  else if (queue?.paused) line = fill(copy.pendingPaused, { wait: waitText(queue.waitMs) });
+  else if (inLine && queue) line = fill(copy.pendingQueued, { wait: waitText(queue.waitMs) });
+  else if (why === 'quota') line = fill(copy.pendingQuota, { when });
+  else if (why === 'stalled') line = copy.pendingStalled;
+
   return (
     <div className="learn-evaluation__block">
-      <p className="learn-label">{copy.pendingTitle}</p>
+      <p className="learn-label">{inLine ? copy.inLineTitle : copy.pendingTitle}</p>
+      {inLine && queue && (
+        <p className="learn-queue">
+          <span className="learn-queue__place">{queue.position}</span>
+          <span className="learn-label">{copy.place}</span>
+        </p>
+      )}
       <p className="learn-text">{line}</p>
-      <EvaluationWatch submissionId={submissionId} nextAttemptAt={evaluation.next_attempt_at} />
+      <EvaluationWatch
+        submissionId={submissionId}
+        delayMs={queue && why !== 'retry' ? queuePollDelay(queue.waitMs) : pollDelay(evaluation.next_attempt_at, now)}
+      />
     </div>
   );
 }
@@ -67,26 +99,32 @@ export default function EvaluationCard({
   evaluation,
   submissionId,
   now,
+  queue,
 }: {
   evaluation: EvaluationRow;
   submissionId: string;
   now: number;
+  /** Where this Submission is in the line for the AI, while it waits. */
+  queue?: QueueEstimate;
 }) {
+  const superseded = evaluation.failure_reason === 'superseded';
   const overridden = evaluation.override_score !== null || evaluation.override_note !== null;
 
   return (
     <div className="learn-evaluation" role="region" aria-label={copy.region} aria-live="polite">
       {overridden && <MentorWord evaluation={evaluation} />}
 
-      {evaluation.status === 'pending' && <Pending evaluation={evaluation} submissionId={submissionId} now={now} />}
+      {evaluation.status === 'pending' && <Pending evaluation={evaluation} submissionId={submissionId} now={now} queue={queue} />}
 
       {evaluation.status === 'failed' && !overridden && (
         <div className="learn-evaluation__block">
-          <p className="learn-label">{copy.failedTitle}</p>
+          <p className="learn-label">{superseded ? copy.supersededTitle : copy.failedTitle}</p>
           <p className="learn-text">
-            {evaluation.failure_reason === 'unreadable'
-              ? copy.failed.unreadable
-              : fill(copy.failed.default, { max: String(MAX_RUNS) })}
+            {superseded
+              ? copy.failed.superseded
+              : evaluation.failure_reason === 'unreadable'
+                ? copy.failed.unreadable
+                : fill(copy.failed.default, { max: String(MAX_RUNS) })}
           </p>
         </div>
       )}

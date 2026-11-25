@@ -18,12 +18,14 @@ import { formatCopy, learnCopy, taskPaths } from '@/content/tasks';
 import { fill } from '@/lib/admin-payments';
 import { getViewer } from '@/lib/auth';
 import { parseCriteria } from '@/lib/tasks/criteria';
-import { learnerTaskById, mentoredSessionIds } from '@/lib/tasks/data';
+import { learnerTaskById, mentoredSessionIds, queueFor } from '@/lib/tasks/data';
 import { closesAt, formatDateTime, formatRelative, formatSpan, lateBy, taskPhase } from '@/lib/tasks/deadlines';
 import { isUuid } from '@/lib/tasks/files';
 import { currentStep, summarise } from '@/lib/tasks/learner';
 import { MAX_ATTEMPTS } from '@/lib/tasks/rules';
 import { requestNow } from '@/lib/tasks/now';
+import { evaluatorPaceMs } from '@/lib/tasks/pace';
+import { queueEstimate } from '@/lib/tasks/queue';
 import { viewerAt } from '@/lib/tasks/viewer';
 
 const copy = learnCopy.task;
@@ -86,6 +88,10 @@ export default async function LearnTaskPage({ params, searchParams }: Props) {
   const justReceived = received && latest?.id === received ? latest : null;
   const step = currentStep(submissions.map((submission) => summarise(submission.created_at, submission.evaluation)));
   const counted = phase === 'open' ? task.deadline : closesAt(task.deadline);
+  // While the latest attempt waits for the AI, where it is in the line.
+  const waiting = latest?.evaluation?.status === 'pending' ? latest.evaluation : null;
+  const line = waiting && latest ? await queueFor(latest.id) : null;
+  const queue = waiting && line ? queueEstimate(line, waiting.next_attempt_at, evaluatorPaceMs(), now) : undefined;
 
   return (
     <PageShell page={page}>
@@ -172,7 +178,7 @@ export default async function LearnTaskPage({ params, searchParams }: Props) {
 
             {latest && (
               <Frame size="lg" accent label={learnCopy.attempt.latest}>
-                <Attempt submission={latest} number={numberOf(0)} deadline={task.deadline} now={now} heading="h3" />
+                <Attempt submission={latest} number={numberOf(0)} deadline={task.deadline} now={now} heading="h3" queue={queue} />
               </Frame>
             )}
 
