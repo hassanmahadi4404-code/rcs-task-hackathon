@@ -10,6 +10,7 @@
 import { useActionState } from 'react';
 
 import { challengeScore, type ChallengeState } from '@/app/(site)/learn/actions';
+import SmoothTextarea from '@/components/tasks/SmoothTextarea';
 import { learnCopy } from '@/content/tasks';
 
 const copy = learnCopy.evaluation.challenge;
@@ -41,7 +42,7 @@ export default function ChallengeForm({ submissionId, to }: ChallengeFormProps) 
           <label className="learn-field__label" htmlFor={`challenge-${submissionId}`}>
             {who.reason}
           </label>
-          <textarea
+          <SmoothTextarea
             className="learn-field__input learn-field__input--short"
             id={`challenge-${submissionId}`}
             name="reason"
@@ -50,7 +51,6 @@ export default function ChallengeForm({ submissionId, to }: ChallengeFormProps) 
             defaultValue={state.reason}
             required
             aria-describedby={`challenge-${submissionId}-hint`}
-            data-lenis-prevent
           />
           <span className="learn-field__hint" id={`challenge-${submissionId}-hint`}>
             {who.reasonHint}

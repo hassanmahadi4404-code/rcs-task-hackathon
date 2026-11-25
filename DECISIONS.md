@@ -21,6 +21,8 @@ What I decided where the Brief was silent, and why. The words are CONTEXT.md's.
 - **A Mentor who is also a Member** is a Learner everywhere except the Sessions they mentor, where they cannot hand in. The database refuses it, not just the page.
 - **Signed in but not part of this** (not a Member on `/learn`; not an Officer or Mentor on `/mentor`): a page that says so and shows the address they signed in with, because the usual cause is the wrong Google account. The database returns them no rows from any table.
 
+- **Nothing in the Learner area scrolls on its own.** The site scrolls smoothly (Lenis), and a box with its own scrollbar takes the wheel from the page: the smooth scroll stops dead whenever the pointer crosses it. So a long answer is shown folded, opening in place, instead of in a scrolling box; and a text box asks for the wheel only while it holds more text than it shows.
+
 ## Deadline night
 
 - **Files go from the browser straight to Storage** over a signed URL, with a progress bar, so Vercel's 4.5 MB limit never sees them. The Storage policies decide who may be given a URL: only a Learner, only into their own folder, only for a Task still taking work. The Submission row then names the file, and a trigger checks the file is really there and really theirs. This upload is the only time the browser talks to Supabase.

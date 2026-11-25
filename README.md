@@ -34,7 +34,7 @@ Follow [CONTRIBUTING.md](CONTRIBUTING.md), "Set up locally". The two variables i
 | `CRON_SECRET` | Vercel sends it to the daily sweep at `/api/evaluations/sweep/`; without it the sweep does nothing. |
 
 ```bash
-npm run gate      # lint, tsc, 85 unit tests, build, kit-check
+npm run gate      # lint, tsc, 89 unit tests, build, kit-check
 npm run test:db   # 137 pgTAP checks of the access rules, as each seed person
 ```
 

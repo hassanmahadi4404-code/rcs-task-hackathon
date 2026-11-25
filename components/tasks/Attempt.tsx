@@ -5,6 +5,7 @@
 
 import StatusPill from '@/components/admin/StatusPill';
 import EvaluationCard from '@/components/tasks/EvaluationCard';
+import WorkText from '@/components/tasks/WorkText';
 import { learnCopy, taskPaths } from '@/content/tasks';
 import { fill } from '@/lib/admin-payments';
 import { formatDateTime, formatSpan, lateBy } from '@/lib/tasks/deadlines';
@@ -47,9 +48,7 @@ export default function Attempt({ submission, number, deadline, now, heading: He
       {submission.body && (
         <div className="learn-attempt__part">
           <p className="learn-label">{copy.yourText}</p>
-          <pre className="task-work" tabIndex={0} data-lenis-prevent>
-            {submission.body}
-          </pre>
+          <WorkText text={submission.body} />
         </div>
       )}
 

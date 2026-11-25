@@ -956,6 +956,58 @@ body.has-reticle .learn input::file-selector-button {
   overflow: auto;
 }
 
+/* In the Learner area the text is never a box that scrolls on its own: a
+   nested scroller takes the wheel from the page, and the site's smooth scroll
+   stops dead over it. A long answer is folded instead (`WorkText`). */
+.task-work--whole {
+  display: block;
+  max-height: none;
+  overflow: visible;
+}
+
+.task-fold > summary {
+  display: grid;
+  list-style: none;
+  cursor: pointer;
+}
+
+.task-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The opening and the rest read as one block: the join has no edge or corner. */
+.task-fold__head {
+  border-bottom: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.task-fold__more {
+  display: flex;
+  align-items: center;
+  min-height: var(--admin-touch);
+  padding: 0 var(--sp-4);
+  border: var(--hairline) solid var(--rcs-hairline);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  background: var(--rcs-surface);
+  color: var(--rcs-accent-text);
+  font-family: var(--font-secondary);
+  font-size: var(--fs-sm);
+}
+
+.task-fold > summary:hover .task-fold__more {
+  color: var(--rcs-accent-ice);
+}
+
+/* Open: the rest takes the place of the "show the rest" line. */
+.task-fold[open] .task-fold__more {
+  display: none;
+}
+
+.task-fold[open] .task-fold__rest {
+  border-top: 0;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+
 .learn-earlier {
   border-top: var(--hairline) solid var(--rcs-hairline);
 }

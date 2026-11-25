@@ -178,6 +178,8 @@ export const learnCopy = {
     latest: 'Latest attempt',
     received: 'Received {when}',
     yourText: 'Your text',
+    /** Under the opening of a long answer; opens the rest. */
+    rest: 'Show the rest ({n} more lines)',
     yourFile: 'Your file',
     download: 'Download {name} ({size})',
     fileSkipped: 'The AI cannot read this kind of file, so it was not part of the first read. Your Mentor can open it.',

@@ -17,6 +17,7 @@
 import { useActionState, useState, useTransition } from 'react';
 
 import { requestUpload, submitWork, type SubmitError, type SubmitState } from '@/app/(site)/learn/actions';
+import SmoothTextarea from '@/components/tasks/SmoothTextarea';
 import { learnCopy } from '@/content/tasks';
 import { fill } from '@/lib/admin-payments';
 import { formatBytes } from '@/lib/tasks/files';
@@ -114,7 +115,7 @@ export default function SubmissionForm({ taskId, clientKey, acceptsText, accepts
           <label className="learn-field__label" htmlFor="submission-body">
             {copy.text}
           </label>
-          <textarea
+          <SmoothTextarea
             className="learn-field__input"
             id="submission-body"
             name="body"
@@ -122,7 +123,6 @@ export default function SubmissionForm({ taskId, clientKey, acceptsText, accepts
             defaultValue={state.body}
             required={!acceptsFile}
             aria-describedby="submission-body-hint"
-            data-lenis-prevent
           />
           <span className="learn-field__hint" id="submission-body-hint">
             {copy.textHint}
