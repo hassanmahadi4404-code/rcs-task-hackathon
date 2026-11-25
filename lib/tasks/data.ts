@@ -12,6 +12,7 @@
 import { cache } from 'react';
 
 import { supabaseServer, type Viewer } from '@/lib/auth';
+import type { BoardRow } from '@/lib/tasks/leaderboard';
 import { planOrder } from '@/lib/tasks/mentor';
 import type { EvaluationRow, SessionRow, SubmissionRow, Submitter, TaskRow, TrackRow } from '@/lib/tasks/types';
 
@@ -313,4 +314,15 @@ export async function trackById(trackId: string): Promise<TrackRow | null> {
   const supabase = await supabaseServer();
   const { data } = await supabase.from('tracks').select(TRACK).eq('id', trackId).maybeSingle();
   return data as TrackRow | null;
+}
+
+// ---------------------------------------------------------------------------
+// Leaderboard
+// ---------------------------------------------------------------------------
+
+/** Names and totals from `public.leaderboard()`; empty for anyone it is not for. */
+export async function leaderboardRows(trackId: string | null): Promise<BoardRow[]> {
+  const supabase = await supabaseServer();
+  const { data } = await supabase.rpc('leaderboard', { p_track: trackId });
+  return (data ?? []) as BoardRow[];
 }

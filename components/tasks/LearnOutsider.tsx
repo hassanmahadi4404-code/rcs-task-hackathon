@@ -26,6 +26,11 @@ export default function LearnOutsider({ email, hasMentorArea }: { email: string;
                 {copy.mentorLink}
               </Link>
             )}
+            {hasMentorArea && (
+              <Link className="learn-button learn-button--quiet" href={taskPaths.leaderboard}>
+                {copy.leaderboardLink}
+              </Link>
+            )}
             <button type="submit" className="learn-button learn-button--quiet">
               {copy.signOut}
             </button>

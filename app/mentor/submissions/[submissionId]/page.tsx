@@ -100,7 +100,7 @@ export default async function MentorSubmissionPage({ params }: { params: Promise
             <dd className="admin-mono">{submitter?.roll}</dd>
           </div>
           <div>
-            <dt>{copy.facts.handedIn}</dt>
+            <dt>{copy.facts.submittedAt}</dt>
             <dd className="admin-mono">{formatDateTime(submission.created_at)}</dd>
           </div>
           <div>

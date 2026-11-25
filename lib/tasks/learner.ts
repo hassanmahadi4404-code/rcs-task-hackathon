@@ -54,30 +54,62 @@ export function learnerState(deadline: string, attempts: readonly AttemptSummary
   return latest.status === 'failed' ? 'needs_mentor' : 'reading';
 }
 
+/** A Task is `running` while it still takes work, late work included, and `finished` after. */
 export interface Grouped<T> {
-  /** Still to do, soonest deadline first. */
-  waiting: T[];
-  /** Handed in, most recent first. */
-  handedIn: T[];
-  /** Closed without the Learner's work, most recent deadline first. */
-  missed: T[];
+  /** Still taking work: what the Learner has not done yet first, then soonest deadline. */
+  running: T[];
+  /** Closed, most recent deadline first. */
+  finished: T[];
 }
 
-export function groupTasks<T extends { deadline: string; attempts: readonly AttemptSummary[] }>(
-  tasks: readonly T[],
-  now: number,
-): Grouped<T> {
-  const groups: Grouped<T> = { waiting: [], handedIn: [], missed: [] };
+type Listed = { deadline: string; attempts: readonly AttemptSummary[] };
+
+export function groupTasks<T extends Listed>(tasks: readonly T[], now: number): Grouped<T> {
+  const groups: Grouped<T> = { running: [], finished: [] };
   for (const task of tasks) {
-    const state = learnerState(task.deadline, task.attempts, now);
-    if (state === 'todo' || state === 'todo_late') groups.waiting.push(task);
-    else if (state === 'missed') groups.missed.push(task);
-    else groups.handedIn.push(task);
+    (taskPhase(task.deadline, now) === 'closed' ? groups.finished : groups.running).push(task);
   }
   const due = (task: T) => Date.parse(task.deadline);
-  const handed = (task: T) => Date.parse(latestAttempt(task.attempts)?.createdAt ?? task.deadline);
-  groups.waiting.sort((a, b) => due(a) - due(b));
-  groups.handedIn.sort((a, b) => handed(b) - handed(a));
-  groups.missed.sort((a, b) => due(b) - due(a));
+  const done = (task: T) => (task.attempts.length > 0 ? 1 : 0);
+  groups.running.sort((a, b) => done(a) - done(b) || due(a) - due(b));
+  groups.finished.sort((a, b) => due(b) - due(a));
   return groups;
+}
+
+export interface LearnerSummary {
+  /** Tasks still taking work. */
+  running: number;
+  /** Of those, the ones the Learner has not handed anything in for. */
+  todo: number;
+  finished: number;
+  /** The scores that stand on the Learner's latest attempts, added up. */
+  points: number;
+}
+
+export function learnerSummary(tasks: readonly Listed[], now: number): LearnerSummary {
+  const summary: LearnerSummary = { running: 0, todo: 0, finished: 0, points: 0 };
+  for (const task of tasks) {
+    const latest = latestAttempt(task.attempts);
+    if (taskPhase(task.deadline, now) === 'closed') summary.finished += 1;
+    else {
+      summary.running += 1;
+      if (!latest) summary.todo += 1;
+    }
+    // A Mentor's score counts at once; the AI's once it has finished reading.
+    if (latest && (latest.overrideScore !== null || latest.status === 'done')) {
+      summary.points += effectiveScore(latest) ?? 0;
+    }
+  }
+  return summary;
+}
+
+/**
+ * Which of a Task's three steps a Learner is on: 1 read it, 2 submit work,
+ * 3 get feedback; 4 when all three are behind them. Opening the Task is
+ * reading it, so nobody is shown step 1 as still to do.
+ */
+export function currentStep(attempts: readonly AttemptSummary[]): 2 | 3 | 4 {
+  const latest = latestAttempt(attempts);
+  if (!latest) return 2;
+  return latest.status === 'pending' && !latest.overridden ? 3 : 4;
 }

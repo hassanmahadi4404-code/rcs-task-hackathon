@@ -8,7 +8,10 @@ What I decided where the Brief was silent, and why. The words are CONTEXT.md's.
 
 ## What a Learner sees
 
-- **`/learn` is three lists:** waiting for you (soonest deadline first), handed in (latest first), and closed without your work. There is no enrolment in the core, so every Member sees every published Task. I did not invent enrolment: a small society's Members drift between Tracks, and a list that hides a Task is worse than one that shows a Task you skip.
+- **`/learn` is two lists: Running and Finished.** A Task is running while it still takes work, late work included, and finished after. Inside Running, what the Learner has not done yet comes first, soonest deadline first, so "what is waiting for me, and by when" is the top of the page. Four numbers sit above the lists: running, to do, finished, and their points.
+- **Every Task carries one marker on its right: a clock or a Finished mark.** A running Task counts down to its deadline, to the second; inside the last day the clock lights up, and inside the last hour it turns the error colour. A late Task counts down to when late work stops. When a clock reaches zero the page asks for itself again, so the Task moves to where it belongs without a reload. The digits are hidden from screen readers, which are given one sentence that does not change every second.
+- **A Task page opens with three steps and the time left**: read the Task, submit your work, get feedback, with the step the Learner is on lit and the ones behind them ticked. The words were chosen for a child: "Submit", "To do", "Done", "Time left".
+- **There is no enrolment in the core**, so every Member sees every published Task. I did not invent enrolment: a small society's Members drift between Tracks, and a list that hides a Task is worse than one that shows a Task you skip.
 - **Late work is taken for 3 days after a deadline, and marked late.** The Brief says some work arrives late today; refusing it at 23:59:01 would send it back to Messenger. Three days, not seven, so the last late Submission still lands inside the Mentor's week and can be answered.
 - **Up to 10 attempts per Task; the latest one counts**, for the Learner and for the Mentor. Several attempts are in CONTEXT.md; the cap exists because each one spends free AI quota. Earlier attempts stay visible. A Submission is never edited or deleted, by anyone: there is no update or delete policy on the table.
 - **Learners see the Grading criteria.** They are "what a good answer looks like", and hiding the marking scheme from the people being marked helps nobody.
@@ -55,6 +58,22 @@ On a local `supabase start` stack the key is derived from the CLI's published de
 - **Tasks can be drafts.** Learners see a Task once it is published, and keep seeing one they handed work in to even if it is later unpublished.
 - **Mentors do not rename or move Sessions, or name other Mentors.** Officers plan Sessions.
 
+## The leaderboard
+
+Everyone who is part of this can open `/learn/leaderboard/`: Members, Mentors and Officers. It ranks Learners by points, overall or for one Track, with the top three set apart and the viewer's own row marked.
+
+- **Points are the scores on a Learner's latest attempt at each Task, added up.** The latest attempt is the one that counts everywhere else, so it counts here; a Mentor's score stands over the AI's; an attempt nobody has scored yet adds nothing until it is. Learners on the same points share a place.
+- **It shows a name and three totals, and nothing else.** "What a Learner hands in is theirs" still holds to the letter: the leaderboard is one database function (`public.leaderboard()`), no policy changed for it, and nobody gained a row of `submissions`, `evaluations` or `members`. It gives no roll, email or phone, and no score for any single Task. Someone who is not a Member, Mentor or Officer gets an empty table. The tests ask it as each kind of person, and check a Learner still cannot read anyone else's work afterwards.
+- **This is still a trade-off.** A ranking tells Learners how the others are doing in total. I judged that worth it for a club whose Sessions are public among its Members, and kept it to totals so that no single piece of work can be read back out of it.
+
+## The pointer
+
+The Learner area uses the site's reticle cursor. The kit's shell leaves the cursor out, but keeps its rules (`styles/chrome.css`), its switch (`config/motion.ts`) and its token, so `components/tasks/Reticle.tsx` is that missing component written to the same contract. It is off on touch screens and under reduced motion, the native cursor is hidden only once it has mounted, and it stands down if the page already has a reticle, which it will after the merge.
+
+## The home page
+
+The kit's landing page (`/`) is a kit file, so it is not changed: the Gate fails an Entry that edits one, and on ruetcs.org that address is the club's own home page anyway. What it did as a list of links is done inside the Learner area instead, by a row of large links on every page: Tasks, Leaderboard, and the Mentor area for someone who has one.
+
 ## The plan as a timeline
 
 The society plans a whole Track ahead in a spreadsheet: every Session in order, each with its syllabus, its Mentors and, for most of them, no date yet. The Sessions page is that sheet: Tracks in the order they are taught, and under each one its Sessions with Syllabus / Topic, Mentor 1, Mentor 2, Date, and how much work came in. Below 768px each row is a card with the same fields.
@@ -76,7 +95,7 @@ Tracks, Sessions and naming Mentors by email, in an "Officers" group of the same
 - **The four seams are kept.** Every string is in `content/tasks.ts`; every decision is a pure module in `lib/tasks/` with an explicit `now` and a test; components render what was decided; every CSS value is a token.
 - **`/mentor` composes the dashboard's pieces** (`AdminShell`, `PageHeader`, `RowList`, `ListToolbar`, `StatGrid`, `FormSection`, `ActionBar`, `PostButton`), with a handful of extra rules. `/learn` uses `PageShell`, `.section` and the HUD frame and section header. The status pill is shared by both sides so one state has one look.
 - **Identity** is only `getViewer()`, `is_admin()`, `viewer_member_id()` and the JWT email. `viewerAt()` adds a `next` address to the sign-in redirect, so an invited Mentor lands on the page they were sent.
-- **The rules live in the database**: policies, a trigger for handing in, and three functions for the Mentor's half of an Evaluation. `npm run test:db` asks 93 questions as each seed person with only their own session.
+- **The rules live in the database**: policies, a trigger for handing in, and three functions for the Mentor's half of an Evaluation. `npm run test:db` asks 104 questions as each seed person with only their own session.
 - **No new dependency.**
 
 ## Not built, and known limits

@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { pendingWhy, pollDelay } from './evaluation-view.ts';
-import { effectiveScore, groupTasks, learnerState, summarise, type AttemptSummary } from './learner.ts';
+import { clockParts, timeLeft, urgency } from './countdown.ts';
+import { rankRows } from './leaderboard.ts';
+import { currentStep, effectiveScore, groupTasks, learnerState, learnerSummary, summarise, type AttemptSummary } from './learner.ts';
 import { arrangeRows, latestPerLearner, mentorTaskPhase, needsPerson, overview, planOrder, reviewRows, reviewState, taskStats } from './mentor.ts';
 import type { EvaluationRow } from './types.ts';
 
@@ -61,19 +63,30 @@ test("the Mentor's score stands over the AI's", () => {
   assert.equal(summarise(inDays(0), null).status, 'pending');
 });
 
-test('/learn lists what is waiting soonest first, then what was handed in, then what was missed', () => {
+test('/learn lists what is running, undone work first, then what has finished', () => {
   const tasks = [
     { id: 'later', deadline: inDays(5), attempts: [] },
-    { id: 'missed', deadline: inDays(-9), attempts: [] },
-    { id: 'done-old', deadline: inDays(1), attempts: [attempt({ createdAt: inDays(-3) })] },
-    { id: 'soon', deadline: inDays(1), attempts: [] },
+    { id: 'closed-missed', deadline: inDays(-9), attempts: [] },
+    { id: 'running-done', deadline: inDays(1), attempts: [attempt({ createdAt: inDays(-3) })] },
+    { id: 'soon', deadline: inDays(2), attempts: [] },
     { id: 'late', deadline: inDays(-1), attempts: [] },
-    { id: 'done-new', deadline: inDays(-20), attempts: [attempt({ createdAt: inDays(-1) })] },
+    { id: 'closed-done', deadline: inDays(-20), attempts: [attempt({ createdAt: inDays(-21), aiScore: 70 })] },
   ];
   const groups = groupTasks(tasks, now);
-  assert.deepEqual(groups.waiting.map((t) => t.id), ['late', 'soon', 'later']);
-  assert.deepEqual(groups.handedIn.map((t) => t.id), ['done-new', 'done-old']);
-  assert.deepEqual(groups.missed.map((t) => t.id), ['missed']);
+  // Late work is still taken, so that Task is still running, and it is the most pressing.
+  assert.deepEqual(groups.running.map((t) => t.id), ['late', 'soon', 'later', 'running-done']);
+  assert.deepEqual(groups.finished.map((t) => t.id), ['closed-missed', 'closed-done']);
+  assert.deepEqual(learnerSummary(tasks, now), { running: 4, todo: 3, finished: 2, points: 130 });
+});
+
+test("a Learner's points are the scores that stand on their latest attempts", () => {
+  const tasks = [
+    { deadline: inDays(1), attempts: [attempt({ aiScore: 40, overrideScore: 90, overridden: true })] },
+    { deadline: inDays(1), attempts: [attempt({ status: 'pending', aiScore: null })] },
+    { deadline: inDays(1), attempts: [attempt({ status: 'failed', aiScore: null, overrideScore: 55, overridden: true })] },
+    { deadline: inDays(1), attempts: [attempt({ createdAt: inDays(-3), aiScore: 99 }), attempt({ createdAt: inDays(-1), aiScore: 10 })] },
+  ];
+  assert.equal(learnerSummary(tasks, now).points, 90 + 0 + 55 + 10);
 });
 
 test('a waiting Evaluation says why it is waiting', () => {
@@ -197,4 +210,38 @@ test('the plan is in the order it is taught, with anything unplaced after it', (
   ];
   // The sort is stable, so the unplaced keep the order they came in.
   assert.deepEqual([...tracks].sort(planOrder).map((track) => track.name), ['Foundations', 'Web', 'CP', 'Old']);
+});
+
+test('the time left is a clock: days only while there are any', () => {
+  const until = now + 2 * 86_400_000 + 5 * 3_600_000 + 7 * 60_000 + 9_000;
+  assert.deepEqual(timeLeft(until, now), { days: 2, hours: 5, minutes: 7, seconds: 9, over: false });
+  assert.deepEqual(clockParts(timeLeft(until, now)).map((p) => p.value + p.unit), ['2d', '05h', '07m', '09s']);
+  assert.deepEqual(clockParts(timeLeft(now + 3_661_000, now)).map((p) => p.value + p.unit), ['01h', '01m', '01s']);
+  assert.deepEqual(timeLeft(now - 5000, now), { days: 0, hours: 0, minutes: 0, seconds: 0, over: true });
+  assert.equal(timeLeft(now, now).over, true);
+});
+
+test('a deadline gets more pressing as it nears', () => {
+  assert.equal(urgency(now + 2 * 86_400_000, now), 'calm');
+  assert.equal(urgency(now + 86_400_000, now), 'soon');
+  assert.equal(urgency(now + 3_600_000, now), 'now');
+  assert.equal(urgency(now - 1, now), 'now');
+});
+
+test('Learners on the same points share a place on the leaderboard', () => {
+  const row = (name: string, points: number, tasks = 1) => ({ name, points, tasks, average: points, is_viewer: false });
+  const ranked = rankRows([row('Dipa', 70), row('Ayesha', 150, 2), row('Tanvir', 90), row('Nusrat', 90), row('Rafi', 150, 3)]);
+  assert.deepEqual(
+    ranked.map((r) => `${r.rank} ${r.name}`),
+    ['1 Rafi', '1 Ayesha', '3 Nusrat', '3 Tanvir', '5 Dipa'],
+  );
+  assert.deepEqual(rankRows([]), []);
+});
+
+test('a Task has three steps, and a Learner is always on one of them', () => {
+  assert.equal(currentStep([]), 2);
+  assert.equal(currentStep([attempt({ status: 'pending', aiScore: null })]), 3);
+  assert.equal(currentStep([attempt()]), 4);
+  assert.equal(currentStep([attempt({ status: 'failed', aiScore: null })]), 4);
+  assert.equal(currentStep([attempt({ status: 'pending', aiScore: null, overridden: true })]), 4);
 });

@@ -37,7 +37,11 @@ export default async function MentorLayout({ children }: { children: React.React
       <RouteFocus />
       {invited ? (
         <AdminShell
-          sections={scope.isOfficer ? [mentorNav.overview, mentorNav.sessions, mentorNav.tracks] : [mentorNav.overview, mentorNav.sessions]}
+          sections={
+            scope.isOfficer
+              ? [mentorNav.overview, mentorNav.sessions, mentorNav.leaderboard, mentorNav.tracks]
+              : [mentorNav.overview, mentorNav.sessions, mentorNav.leaderboard]
+          }
           email={viewer.email}
           role={scope.isOfficer ? mentorCopy.roles.officer : mentorCopy.roles.mentor}
           locked={false}

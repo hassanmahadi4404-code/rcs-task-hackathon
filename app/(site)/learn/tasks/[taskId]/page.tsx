@@ -7,8 +7,11 @@ import { notFound } from 'next/navigation';
 import PageShell from '@/components/chrome/PageShell';
 import Frame from '@/components/hud/Frame';
 import Attempt from '@/components/tasks/Attempt';
+import Countdown from '@/components/tasks/Countdown';
+import LearnNav from '@/components/tasks/LearnNav';
 import LearnOutsider from '@/components/tasks/LearnOutsider';
 import SectionHeading from '@/components/tasks/SectionHeading';
+import Steps from '@/components/tasks/Steps';
 import SubmissionForm from '@/components/tasks/SubmissionForm';
 import type { PageMeta } from '@/content/pages';
 import { formatCopy, learnCopy, taskPaths } from '@/content/tasks';
@@ -18,6 +21,7 @@ import { parseCriteria } from '@/lib/tasks/criteria';
 import { learnerTaskById, mentoredSessionIds } from '@/lib/tasks/data';
 import { closesAt, formatDateTime, formatRelative, formatSpan, lateBy, taskPhase } from '@/lib/tasks/deadlines';
 import { isUuid } from '@/lib/tasks/files';
+import { currentStep, summarise } from '@/lib/tasks/learner';
 import { MAX_ATTEMPTS } from '@/lib/tasks/rules';
 import { requestNow } from '@/lib/tasks/now';
 import { viewerAt } from '@/lib/tasks/viewer';
@@ -45,10 +49,8 @@ export default async function LearnTaskPage({ params, searchParams }: Props) {
   const [{ taskId }, { received, again }] = await Promise.all([params, searchParams]);
   const viewer = await viewerAt(taskPaths.learnTask(taskId));
   const { memberId } = viewer;
-  if (!memberId) {
-    const mentors = (await mentoredSessionIds(viewer.email)).length > 0;
-    return <LearnOutsider email={viewer.email} hasMentorArea={viewer.isOfficer || mentors} />;
-  }
+  const hasMentorArea = viewer.isOfficer || (await mentoredSessionIds(viewer.email)).length > 0;
+  if (!memberId) return <LearnOutsider email={viewer.email} hasMentorArea={hasMentorArea} />;
   const item = isUuid(taskId) ? await learnerTaskById({ ...viewer, memberId }, taskId) : null;
   if (!item) notFound();
 
@@ -82,14 +84,40 @@ export default async function LearnTaskPage({ params, searchParams }: Props) {
   const attemptsLeft = MAX_ATTEMPTS - submissions.length;
   const canHandIn = phase !== 'closed' && !mentored && attemptsLeft > 0;
   const justReceived = received && latest?.id === received ? latest : null;
+  const step = currentStep(submissions.map((submission) => summarise(submission.created_at, submission.evaluation)));
+  const counted = phase === 'open' ? task.deadline : closesAt(task.deadline);
 
   return (
     <PageShell page={page}>
       <section className="section" aria-labelledby="brief">
         <div className="section__inner">
+          <LearnNav current="tasks" hasMentorArea={hasMentorArea} />
           <Link className="learn-back" href={taskPaths.learn}>
             <span aria-hidden="true">←</span> {copy.back}
           </Link>
+
+          <div className="learn-glance">
+            <Steps current={mentored ? 1 : step} />
+            <div className="learn-deadline" data-phase={phase}>
+              <span className="learn-label">{copy.deadline[phase]}</span>
+              {phase === 'closed' ? (
+                <span className="learn-deadline__done">{fill(copy.deadline.closedOn, { when: closes })}</span>
+              ) : (
+                <>
+                  <Countdown
+                    until={counted}
+                    renderedAt={now}
+                    size="page"
+                    label={fill(phase === 'open' ? learnCopy.card.timerLabel : learnCopy.card.lateTimerLabel, {
+                      when: phase === 'open' ? when : closes,
+                    })}
+                  />
+                  <span className="learn-note">{fill(copy.deadline.due, { when })}</span>
+                </>
+              )}
+            </div>
+          </div>
+
           <SectionHeading id="brief" {...copy.brief} />
           <div className="learn-brief">
             <p className="learn-prose">{task.instructions}</p>

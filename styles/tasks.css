@@ -12,7 +12,10 @@
    captions. Controls follow the dashboard's (same touch height, same edges)
    so a button is a button on both sides.
 
-     learn-list     the three lists on /learn, as cards
+     learn-nav      the way around: Tasks, leaderboard, Mentor area
+     learn-list     Running and Finished on /learn, as cards with a marker
+     task-clock     the time left, ticking
+     learn-board    the leaderboard
      learn-brief    a Task's instructions and criteria
      learn-notice   the receipt, a refusal, a warning
      learn-attempt  one Submission and its Evaluation
@@ -23,6 +26,7 @@
 .learn,
 .admin {
   --task-card-min: calc(var(--sp-16) + var(--sp-12));
+  --task-row-min: calc(var(--sp-16) * 2);
   --task-work-max-h: calc(var(--sp-16) * 2);
   --task-score-w: var(--sp-13);
 }
@@ -130,22 +134,113 @@
   border-color: var(--rcs-text);
 }
 
+/* ---- The way around ---------------------------------------------------------- */
+
+.learn-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-9);
+}
+
+.learn-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: calc(var(--admin-touch) + var(--sp-2));
+  padding: 0 var(--sp-6);
+  border: var(--hairline) solid var(--rcs-hairline-strong);
+  border-radius: var(--radius-pill);
+  background: var(--rcs-surface);
+  color: var(--rcs-text);
+  font-family: var(--font-secondary);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.learn-nav a:hover {
+  border-color: var(--rcs-accent-hairline);
+  color: var(--rcs-accent-ice);
+}
+
+/* Where you are: the accent edge and its glow, not a filled pill, so the
+   label keeps its contrast. */
+.learn-nav a[aria-current="page"] {
+  border-color: var(--rcs-accent);
+  background: var(--rcs-surface-raised);
+  box-shadow: var(--glow-edge);
+}
+
+.learn-nav__icon {
+  flex: none;
+  width: var(--sp-5);
+  height: var(--sp-5);
+  color: var(--rcs-accent-ice);
+}
+
+/* ---- /learn: where you stand --------------------------------------------------- */
+
+.learn-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--sp-14)), 1fr));
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-11);
+}
+
+.learn-stat {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  border: var(--hairline) solid var(--rcs-hairline);
+  border-radius: var(--radius-md);
+  background: var(--rcs-surface);
+}
+
+.learn-stat dt {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-telemetry);
+  text-transform: uppercase;
+  color: var(--rcs-dim);
+}
+
+.learn-stat dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-stat);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--rcs-text);
+}
+
+/* Something is still to do: the one tile that asks for attention. */
+.learn-stat[data-accent] {
+  border-color: var(--rcs-accent-hairline);
+}
+
+.learn-stat[data-accent] dd {
+  color: var(--rcs-accent-ice);
+}
+
 /* ---- /learn: the lists ----------------------------------------------------- */
 
 .learn-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--task-card-min)), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--task-row-min)), 1fr));
   gap: var(--sp-4);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* What the Task is on the left; the one thing to know at a glance on the
+   right, behind a hairline: the clock, or the Finished mark. */
 .learn-card {
   position: relative;
   display: grid;
-  align-content: start;
-  gap: var(--sp-3);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-5);
   height: 100%;
   padding: var(--sp-5);
   border: var(--hairline) solid var(--rcs-hairline);
@@ -156,6 +251,17 @@
 .learn-card:hover,
 .learn-card:focus-within {
   border-color: var(--rcs-accent-hairline);
+}
+
+.learn-card[data-phase="closed"] {
+  background: transparent;
+}
+
+.learn-card__main {
+  display: grid;
+  align-content: start;
+  gap: var(--sp-3);
+  min-width: 0;
 }
 
 .learn-card__where {
@@ -202,7 +308,6 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: var(--sp-3);
   margin-top: var(--sp-2);
 }
@@ -212,6 +317,334 @@
   font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
   color: var(--rcs-text);
+}
+
+.learn-card__marker {
+  display: grid;
+  align-content: center;
+  justify-items: end;
+  gap: var(--sp-2);
+  padding-left: var(--sp-5);
+  border-left: var(--hairline) solid var(--rcs-hairline);
+}
+
+.learn-card__marker[data-kind="finished"] {
+  justify-items: center;
+}
+
+.learn-card__marker-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--tracking-telemetry);
+  text-transform: uppercase;
+  color: var(--rcs-dim);
+  white-space: nowrap;
+}
+
+.learn-card__check {
+  width: var(--sp-7);
+  height: var(--sp-7);
+  color: var(--rcs-status-completed);
+}
+
+/* On a phone the marker drops under the Task and runs along the bottom. */
+@media (max-width: 560px) {
+  .learn-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .learn-card__marker,
+  .learn-card__marker[data-kind="finished"] {
+    grid-auto-flow: column;
+    justify-content: space-between;
+    justify-items: start;
+    align-items: center;
+    padding: var(--sp-4) 0 0;
+    border-left: 0;
+    border-top: var(--hairline) solid var(--rcs-hairline);
+  }
+}
+
+/* ---- The clock ----------------------------------------------------------------- */
+
+/* Calm while there is more than a day, lit inside the last day, and the
+   error colour inside the last hour. The digits never change width. */
+.task-clock {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--rcs-text);
+  white-space: nowrap;
+}
+
+.task-clock[data-urgency="soon"] {
+  color: var(--rcs-accent-ice);
+}
+
+.task-clock[data-urgency="now"] {
+  color: var(--rcs-error);
+}
+
+.task-clock__part {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--hairline-thick);
+}
+
+.task-clock__value {
+  font-size: var(--fs-lead);
+  line-height: 1;
+}
+
+.task-clock__unit {
+  font-size: var(--fs-micro);
+  color: var(--rcs-dim);
+}
+
+.task-clock[data-size="page"] {
+  gap: var(--sp-4);
+}
+
+.task-clock[data-size="page"] .task-clock__value {
+  font-size: var(--fs-h2);
+}
+
+.task-clock[data-size="page"] .task-clock__unit {
+  font-size: var(--fs-caption);
+}
+
+.admin .task-clock__value {
+  font-size: var(--fs-admin-small);
+}
+
+.task-due {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+/* ---- A Task at a glance: the steps and the time left ------------------------------ */
+
+.learn-glance {
+  display: grid;
+  gap: var(--sp-7);
+  align-items: center;
+  margin-bottom: var(--sp-11);
+}
+
+@media (min-width: 1024px) {
+  .learn-glance {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.learn-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4) var(--sp-7);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learn-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-family: var(--font-secondary);
+  font-size: var(--fs-sm);
+  color: var(--rcs-dim);
+}
+
+.learn-steps__mark {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--sp-7);
+  height: var(--sp-7);
+  border: var(--hairline) solid var(--rcs-hairline-strong);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+}
+
+.learn-steps__icon {
+  width: var(--sp-4);
+  height: var(--sp-4);
+}
+
+.learn-steps li[data-state="done"] {
+  color: var(--rcs-muted);
+}
+
+.learn-steps li[data-state="current"] {
+  color: var(--rcs-text);
+  font-weight: 500;
+}
+
+.learn-steps li[data-state="current"] .learn-steps__mark {
+  border-color: var(--rcs-accent);
+  color: var(--rcs-accent-ice);
+  box-shadow: var(--glow-edge);
+}
+
+.learn-deadline {
+  display: grid;
+  justify-items: start;
+  gap: var(--sp-3);
+  padding: var(--sp-5) var(--sp-6);
+  border: var(--hairline) solid var(--rcs-accent-hairline);
+  border-radius: var(--radius-md);
+  background: var(--rcs-surface);
+}
+
+.learn-deadline[data-phase="closed"] {
+  border-color: var(--rcs-hairline);
+}
+
+.learn-deadline__done {
+  font-family: var(--font-secondary);
+  font-size: var(--fs-lead);
+  color: var(--rcs-muted);
+}
+
+/* ---- The leaderboard --------------------------------------------------------------- */
+
+.learn-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-7);
+}
+
+.learn-filter a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--admin-touch);
+  padding: 0 var(--sp-4);
+  border: var(--hairline) solid var(--rcs-hairline);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--rcs-muted);
+  text-decoration: none;
+}
+
+.learn-filter a:hover {
+  border-color: var(--rcs-accent-hairline);
+  color: var(--rcs-accent-ice);
+}
+
+.learn-filter a[aria-current="true"] {
+  border-color: var(--rcs-accent);
+  color: var(--rcs-text);
+}
+
+.learn-notice + .hud-section-header {
+  margin-top: var(--sp-9);
+}
+
+.learn-podium {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--task-card-min)), 1fr));
+  gap: var(--sp-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learn-podium__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+  font-family: var(--font-secondary);
+  font-size: var(--fs-lead);
+  font-weight: 500;
+  color: var(--rcs-text);
+  overflow-wrap: anywhere;
+}
+
+.learn-podium .learn-note {
+  margin-top: var(--sp-3);
+}
+
+.learn-board {
+  width: 100%;
+  margin-bottom: var(--sp-6);
+  border-collapse: collapse;
+}
+
+.learn-board th,
+.learn-board td {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: var(--hairline) solid var(--rcs-hairline);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.learn-board thead th {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  font-weight: 400;
+  letter-spacing: var(--tracking-telemetry);
+  text-transform: uppercase;
+  color: var(--rcs-dim);
+}
+
+.learn-board__rank {
+  width: var(--sp-11);
+  font-family: var(--font-mono);
+  font-size: var(--fs-lead);
+  font-variant-numeric: tabular-nums;
+  color: var(--rcs-dim);
+}
+
+.learn-board__who {
+  font-family: var(--font-secondary);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--rcs-text);
+  overflow-wrap: anywhere;
+}
+
+.learn-board__who > span {
+  display: block;
+}
+
+.learn-board__points,
+.learn-board thead th:last-child {
+  text-align: right;
+}
+
+.learn-board__points {
+  font-family: var(--font-mono);
+  font-size: var(--fs-lead);
+  font-variant-numeric: tabular-nums;
+  color: var(--rcs-text);
+}
+
+/* The Learner looking: their own row, marked down its left edge. */
+.learn-board tr[data-you] {
+  background: var(--rcs-surface-raised);
+}
+
+.learn-board tr[data-you] .learn-board__rank {
+  color: var(--rcs-accent-ice);
+  box-shadow: inset var(--hairline-thick) 0 0 var(--rcs-accent);
+}
+
+/* ---- The reticle cursor ------------------------------------------------------------ */
+
+/* `styles/chrome.css` hides the native cursor over links and buttons once the
+   reticle has mounted; these are the Learner area's other controls. */
+body.has-reticle .learn :is(summary, label, select, textarea, input),
+body.has-reticle .learn input::file-selector-button {
+  cursor: none;
 }
 
 /* ---- A Task's brief -------------------------------------------------------- */
@@ -711,6 +1144,12 @@
   overflow-wrap: anywhere;
 }
 
+@media (min-width: 768px) {
+  .task-email {
+    white-space: nowrap;
+  }
+}
+
 .task-flag {
   max-width: var(--content-max-w);
   padding: var(--sp-4);
@@ -722,6 +1161,8 @@
 @media (prefers-reduced-motion: no-preference) {
   .learn-back,
   .learn-card,
+  .learn-nav a,
+  .learn-filter a,
   .learn-button,
   .learn-link,
   .learn-field__input {

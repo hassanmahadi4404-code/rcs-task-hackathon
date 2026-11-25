@@ -8,8 +8,9 @@ import PageHeader from '@/components/admin/PageHeader';
 import PostButton from '@/components/admin/PostButton';
 import RowList, { ListGroup, Row } from '@/components/admin/RowList';
 import StatusPill from '@/components/admin/StatusPill';
+import Countdown from '@/components/tasks/Countdown';
 import MentorForm from '@/components/tasks/MentorForm';
-import { formatCopy, mentorCopy, taskPaths } from '@/content/tasks';
+import { formatCopy, learnCopy, mentorCopy, taskPaths } from '@/content/tasks';
 import { fill } from '@/lib/admin-payments';
 import { mentorScope, mentorSession } from '@/lib/tasks/data';
 import { formatDate, formatDateTime, sessionEditUntil, sessionPhase } from '@/lib/tasks/deadlines';
@@ -99,7 +100,19 @@ export default async function SessionPage({ params }: Props) {
                   key={task.id}
                   title={<Link href={taskPaths.task(task.id)}>{task.title}</Link>}
                   data={[
-                    [copy.tasks.columns[1], <span className="admin-mono" key="due">{formatDateTime(task.deadline)}</span>],
+                    [
+                      copy.tasks.columns[1],
+                      <span className="task-due" key="due">
+                        <span className="admin-mono">{formatDateTime(task.deadline)}</span>
+                        {mentorTaskPhase(task, now) === 'open' && (
+                          <Countdown
+                            until={task.deadline}
+                            renderedAt={now}
+                            label={fill(learnCopy.card.timerLabel, { when: formatDateTime(task.deadline) })}
+                          />
+                        )}
+                      </span>,
+                    ],
                     [copy.tasks.columns[2], task.formats.map((format) => formatCopy.short[format]).join(', ')],
                     [copy.tasks.columns[3], <span className="admin-mono" key="work">{learners}</span>],
                   ]}
