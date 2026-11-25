@@ -190,13 +190,23 @@ export const learnCopy = {
     challenge: {
       open: 'Challenge this score',
       title: 'Think the AI got it wrong?',
-      reason: 'Tell your Mentor why',
-      reasonHint: 'Say what the AI missed, in a sentence or two. Your Mentor reads this, looks at your work, and replies here.',
-      submit: 'Send to my Mentor',
+      submit: 'Send',
       sending: 'Sending',
       sentTitle: 'Challenged',
-      sent: 'You challenged this score on {when}. Your Mentor will look at your work and reply here. The score stays as it is until they do.',
-      yourReason: 'What you told your Mentor',
+      yourReason: 'What you wrote',
+      /** Said by who will answer: the Session's Mentor, or an Officer when no Mentor can. */
+      to: {
+        mentor: {
+          reason: 'Tell your Mentor why',
+          reasonHint: 'Say what the AI missed, in a sentence or two. Your Mentor reads this, looks at your work, and replies here.',
+          sent: 'You challenged this score on {when}. Your Mentor will look at your work and reply here. The score stays as it is until they do.',
+        },
+        officer: {
+          reason: 'Say why',
+          reasonHint: 'Say what the AI missed, in a sentence or two. This Session has no Mentor who can reply right now, so an Officer of the society reads this and replies here.',
+          sent: 'You challenged this score on {when}. This Session has no Mentor who can reply right now, so an Officer of the society will look at your work and reply here. The score stays as it is until they do.',
+        },
+      },
       errors: {
         reason_missing: 'Write why you think the score is wrong, so your Mentor knows what to look at.',
         reason_too_long: 'Keep your reason to 1,000 characters.',

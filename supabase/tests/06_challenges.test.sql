@@ -2,7 +2,7 @@
 -- reason, once, on their latest attempt, while the AI's score still stands.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(16);
+select plan(19);
 
 create schema tests;
 create function tests.claims(p_email text) returns text
@@ -26,6 +26,23 @@ grant usage on schema tests to anon, authenticated;
 grant execute on all functions in schema tests to anon, authenticated;
 
 -- The seed: learner1 scored 82 and learner2 41 on "A personal profile page".
+
+-- Who will answer: a Mentor only where there is one and their window is open.
+select set_config('request.jwt.claims', tests.claims('learner1@kit.test'), true);
+set local role authenticated;
+select ok(
+  public.task_has_acting_mentor((select id from public.tasks where title = 'A to-do list')),
+  'a running Session with a Mentor: the Mentor answers'
+);
+select ok(
+  not public.task_has_acting_mentor((select id from public.tasks where title = 'A personal profile page')),
+  'a Session whose Mentor''s window has closed: it falls to an Officer'
+);
+select ok(
+  not public.task_has_acting_mentor((select id from public.tasks where title = 'Two sum, faster')),
+  'a Session with no Mentor: it falls to an Officer'
+);
+reset role;
 
 -- Not the Learner's own: refused, whoever asks.
 select set_config('request.jwt.claims', tests.claims('learner2@kit.test'), true);

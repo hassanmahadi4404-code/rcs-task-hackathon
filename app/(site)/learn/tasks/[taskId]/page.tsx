@@ -18,7 +18,7 @@ import { formatCopy, learnCopy, taskPaths } from '@/content/tasks';
 import { fill } from '@/lib/admin-payments';
 import { getViewer } from '@/lib/auth';
 import { parseCriteria } from '@/lib/tasks/criteria';
-import { learnerTaskById, mentoredSessionIds, queueFor } from '@/lib/tasks/data';
+import { learnerTaskById, mentoredSessionIds, queueFor, taskHasActingMentor } from '@/lib/tasks/data';
 import { closesAt, formatDateTime, formatRelative, formatSpan, lateBy, taskPhase } from '@/lib/tasks/deadlines';
 import { isUuid } from '@/lib/tasks/files';
 import { currentStep, summarise } from '@/lib/tasks/learner';
@@ -88,6 +88,8 @@ export default async function LearnTaskPage({ params, searchParams }: Props) {
   const justReceived = received && latest?.id === received ? latest : null;
   const step = currentStep(submissions.map((submission) => summarise(submission.created_at, submission.evaluation)));
   const counted = phase === 'open' ? task.deadline : closesAt(task.deadline);
+  // A challenge is answered by the Session's Mentor while one can act, otherwise by an Officer.
+  const answeredBy = latest && (await taskHasActingMentor(task.id)) ? 'mentor' : 'officer';
   // While the latest attempt waits for the AI, where it is in the line.
   const waiting = latest?.evaluation?.status === 'pending' ? latest.evaluation : null;
   const line = waiting && latest ? await queueFor(latest.id) : null;
@@ -178,7 +180,7 @@ export default async function LearnTaskPage({ params, searchParams }: Props) {
 
             {latest && (
               <Frame size="lg" accent label={learnCopy.attempt.latest}>
-                <Attempt submission={latest} number={numberOf(0)} deadline={task.deadline} now={now} heading="h3" queue={queue} latest />
+                <Attempt submission={latest} number={numberOf(0)} deadline={task.deadline} now={now} heading="h3" queue={queue} latest answeredBy={answeredBy} />
               </Frame>
             )}
 

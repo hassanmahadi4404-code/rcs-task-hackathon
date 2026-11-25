@@ -136,6 +136,13 @@ export async function learnerTaskById(
   return { ...item, mentored: mentored.includes(item.task.session_id) };
 }
 
+/** Whether a Task's Session has a Mentor who can still act; when not, an Officer answers for it. */
+export async function taskHasActingMentor(taskId: string): Promise<boolean> {
+  const supabase = await supabaseServer();
+  const { data } = await supabase.rpc('task_has_acting_mentor', { p_task: taskId });
+  return data === true;
+}
+
 /** How long the line for the AI is in front of a Submission the viewer may read; null otherwise. */
 export async function queueFor(submissionId: string): Promise<QueueState | null> {
   const supabase = await supabaseServer();

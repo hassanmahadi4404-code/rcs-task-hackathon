@@ -2,7 +2,7 @@
 
 /**
  * A Learner challenges the AI's score: one sentence or two on what it
- * missed, sent to their Mentor. It sits folded beside the score, behind a
+ * missed, sent to whoever will answer, and it says who that is. It sits folded beside the score, behind a
  * native `<summary>`, so it opens without JavaScript and the form posts
  * through a server action either way. What was typed stays if it is refused.
  */
@@ -16,8 +16,15 @@ const copy = learnCopy.evaluation.challenge;
 const MAX_REASON = 1000;
 const initial: ChallengeState = { error: null, reason: '' };
 
-export default function ChallengeForm({ submissionId }: { submissionId: string }) {
+export interface ChallengeFormProps {
+  submissionId: string;
+  /** Who will answer: the Session's Mentor, or an Officer when no Mentor can. */
+  to: 'mentor' | 'officer';
+}
+
+export default function ChallengeForm({ submissionId, to }: ChallengeFormProps) {
   const [state, action, sending] = useActionState(challengeScore, initial);
+  const who = copy.to[to];
 
   return (
     <details className="learn-challenge" open={state.error !== null || undefined}>
@@ -32,7 +39,7 @@ export default function ChallengeForm({ submissionId }: { submissionId: string }
         )}
         <p className="learn-field" data-invalid={state.error === 'reason_missing' || state.error === 'reason_too_long' || undefined}>
           <label className="learn-field__label" htmlFor={`challenge-${submissionId}`}>
-            {copy.reason}
+            {who.reason}
           </label>
           <textarea
             className="learn-field__input learn-field__input--short"
@@ -46,7 +53,7 @@ export default function ChallengeForm({ submissionId }: { submissionId: string }
             data-lenis-prevent
           />
           <span className="learn-field__hint" id={`challenge-${submissionId}-hint`}>
-            {copy.reasonHint}
+            {who.reasonHint}
           </span>
         </p>
         <div className="learn-actions">

@@ -103,6 +103,7 @@ export default function EvaluationCard({
   now,
   queue,
   canChallenge = false,
+  answeredBy = 'mentor',
 }: {
   evaluation: EvaluationRow;
   submissionId: string;
@@ -111,6 +112,8 @@ export default function EvaluationCard({
   queue?: QueueEstimate;
   /** This is the Learner's latest attempt, so its score is theirs to challenge. */
   canChallenge?: boolean;
+  /** Who answers a challenge here: the Session's Mentor, or an Officer when no Mentor can. */
+  answeredBy?: 'mentor' | 'officer';
 }) {
   const superseded = evaluation.failure_reason === 'superseded';
   const overridden = evaluation.override_score !== null || evaluation.override_note !== null;
@@ -140,11 +143,11 @@ export default function EvaluationCard({
           <div className="learn-score-row">
             <Score value={evaluation.ai_score} superseded={evaluation.override_score !== null} />
             {evaluation.challenged_at && !overridden && <StatusPill tone="upcoming">{copy.challenge.sentTitle}</StatusPill>}
-            {canChallenge && !overridden && !evaluation.challenged_at && <ChallengeForm submissionId={submissionId} />}
+            {canChallenge && !overridden && !evaluation.challenged_at && <ChallengeForm submissionId={submissionId} to={answeredBy} />}
           </div>
           {evaluation.challenged_at && (
             <div className="learn-notice" data-tone={overridden ? 'quiet' : undefined}>
-              {!overridden && <p>{fill(copy.challenge.sent, { when: formatDateTime(evaluation.challenged_at) })}</p>}
+              {!overridden && <p>{fill(copy.challenge.to[answeredBy].sent, { when: formatDateTime(evaluation.challenged_at) })}</p>}
               <p className="learn-label">{copy.challenge.yourReason}</p>
               <p className="task-feedback__plain">{evaluation.challenge_note}</p>
             </div>
