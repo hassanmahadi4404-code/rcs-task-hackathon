@@ -139,6 +139,13 @@ export default async function MentorSubmissionPage({ params }: { params: Promise
       </FormSection>
 
       <FormSection id="ai" title={copy.ai.title} description={copy.ai.description} wide>
+        {evaluation?.challenged_at && (
+          <div className="task-flag" data-tone={overridden ? 'answered' : undefined}>
+            <h3 className="task-flag__title">{copy.ai.challengedTitle}</h3>
+            <p className="task-feedback__plain">{evaluation.challenge_note}</p>
+            <p className="admin-field__hint">{fill(copy.ai.challenged, { when: formatDateTime(evaluation.challenged_at) })}</p>
+          </div>
+        )}
         {evaluation && <AiRead evaluation={evaluation} now={now} />}
         {canEdit && evaluation && evaluation.status !== 'pending' && (
           <div className="admin-actions">

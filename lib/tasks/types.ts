@@ -25,6 +25,10 @@ export interface EvaluationRow {
   next_attempt_at: string;
   failure_reason: FailureReason | null;
   flagged: boolean;
+  /** When the Learner challenged the AI's score; null if they have not. */
+  challenged_at: string | null;
+  /** Why they think it is wrong, in their words. */
+  challenge_note: string | null;
 }
 
 export interface SubmissionRow {

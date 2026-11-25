@@ -12,28 +12,31 @@ import type { EvaluationRow, SubmissionRow } from './types.ts';
 /**
  * - `changed`: a Mentor or Officer has had their say; nothing more to do.
  * - `failed`: the AI could not read it; it needs a person.
+ * - `challenged`: the Learner disagrees with the AI's score and said why.
  * - `flagged`: the AI read it, but it reads like an attempt to steer the AI.
  * - `reading`: the AI has not finished.
  * - `read`: the AI's Evaluation stands.
  * - `skipped`: an older attempt the AI was never asked to read, because the
  *   Learner sent a newer one first. Nothing to do.
  */
-export type ReviewState = 'changed' | 'failed' | 'flagged' | 'reading' | 'read' | 'skipped';
+export type ReviewState = 'changed' | 'failed' | 'challenged' | 'flagged' | 'reading' | 'read' | 'skipped';
 
 type Reviewed = Pick<EvaluationRow, 'status' | 'override_score' | 'override_note' | 'flagged'> &
-  Partial<Pick<EvaluationRow, 'failure_reason'>>;
+  Partial<Pick<EvaluationRow, 'failure_reason' | 'challenged_at'>>;
 
 export function reviewState(evaluation: Reviewed | null): ReviewState {
   if (!evaluation) return 'reading';
   if (evaluation.override_score !== null || evaluation.override_note !== null) return 'changed';
   if (evaluation.status === 'failed' && evaluation.failure_reason === 'superseded') return 'skipped';
   if (evaluation.status === 'failed') return 'failed';
+  // A Learner asking comes before the AI's own doubt: someone is waiting on the answer.
+  if (evaluation.challenged_at) return 'challenged';
   if (evaluation.flagged) return 'flagged';
   return evaluation.status === 'pending' ? 'reading' : 'read';
 }
 
 export function needsPerson(state: ReviewState): boolean {
-  return state === 'failed' || state === 'flagged';
+  return state === 'failed' || state === 'flagged' || state === 'challenged';
 }
 
 export interface LearnerWork<T> {
@@ -120,7 +123,7 @@ export interface ReviewRow<T> {
   aiScore: number | null;
 }
 
-export const REVIEW_GROUPS = ['all', 'attention', 'reading', 'changed', 'late'] as const;
+export const REVIEW_GROUPS = ['all', 'attention', 'challenged', 'reading', 'changed', 'late'] as const;
 export type ReviewGroup = (typeof REVIEW_GROUPS)[number];
 
 export const REVIEW_SORTS = ['recent', 'name', 'score'] as const;
@@ -151,6 +154,7 @@ export function reviewRows<T extends Pick<SubmissionRow, 'member_id' | 'created_
 
 export function inGroup(row: Pick<ReviewRow<unknown>, 'state' | 'late'>, group: ReviewGroup): boolean {
   if (group === 'attention') return needsPerson(row.state);
+  if (group === 'challenged') return row.state === 'challenged';
   if (group === 'reading') return row.state === 'reading';
   if (group === 'changed') return row.state === 'changed';
   if (group === 'late') return row.late > 0;

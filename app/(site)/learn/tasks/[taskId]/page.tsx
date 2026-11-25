@@ -178,7 +178,7 @@ export default async function LearnTaskPage({ params, searchParams }: Props) {
 
             {latest && (
               <Frame size="lg" accent label={learnCopy.attempt.latest}>
-                <Attempt submission={latest} number={numberOf(0)} deadline={task.deadline} now={now} heading="h3" queue={queue} />
+                <Attempt submission={latest} number={numberOf(0)} deadline={task.deadline} now={now} heading="h3" queue={queue} latest />
               </Frame>
             )}
 

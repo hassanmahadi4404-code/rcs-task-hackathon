@@ -28,6 +28,7 @@ const attempt = (over: Partial<AttemptSummary> = {}): AttemptSummary => ({
   aiScore: 60,
   overrideScore: null,
   overridden: false,
+  challenged: false,
   ...over,
 });
 const evaluation = (over: Partial<EvaluationRow> = {}): EvaluationRow => ({
@@ -45,6 +46,8 @@ const evaluation = (over: Partial<EvaluationRow> = {}): EvaluationRow => ({
   next_attempt_at: inDays(0),
   failure_reason: null,
   flagged: false,
+  challenged_at: null,
+  challenge_note: null,
   ...over,
 });
 
@@ -59,6 +62,11 @@ test("the latest attempt decides a Learner's state", () => {
   assert.equal(learnerState(inDays(2), [attempt()], now), 'feedback');
   assert.equal(learnerState(inDays(2), [attempt({ status: 'failed', aiScore: null })], now), 'needs_mentor');
   assert.equal(learnerState(inDays(2), [attempt({ status: 'failed', overridden: true })], now), 'mentor');
+  assert.equal(learnerState(inDays(2), [attempt({ challenged: true })], now), 'challenged');
+  // Once the Mentor answers, it is the Mentor's reply that shows, not the challenge.
+  const answered = summarise(inDays(0), evaluation({ challenged_at: inDays(-1), challenge_note: 'x', override_score: 70 }));
+  assert.deepEqual([answered.challenged, answered.overridden], [false, true]);
+  assert.equal(summarise(inDays(0), evaluation({ challenged_at: inDays(-1), challenge_note: 'x' })).challenged, true);
   const older = attempt({ createdAt: inDays(-3) });
   const newer = attempt({ createdAt: inDays(-1), status: 'pending' });
   assert.equal(learnerState(inDays(2), [older, newer], now), 'reading');
@@ -122,6 +130,12 @@ test('what a Mentor needs to look at', () => {
   assert.equal(reviewState(evaluation({ status: 'failed', override_score: 50 })), 'changed');
   assert.equal(reviewState(evaluation({ flagged: true, override_note: 'I read it' })), 'changed');
   assert.equal(reviewState(null), 'reading');
+  // A challenge needs a person, until a person has answered it.
+  const challenged = evaluation({ challenged_at: inDays(0), challenge_note: 'I did test it.' });
+  assert.equal(reviewState(challenged), 'challenged');
+  assert.equal(needsPerson('challenged'), true);
+  assert.equal(reviewState({ ...challenged, flagged: true }), 'challenged');
+  assert.equal(reviewState({ ...challenged, override_note: 'You are right.' }), 'changed');
   // An older attempt set aside for a newer one is nobody's problem.
   const skipped = reviewState(evaluation({ status: 'failed', failure_reason: 'superseded' }));
   assert.equal(skipped, 'skipped');
@@ -175,6 +189,7 @@ test("a Task's list is each Learner's latest attempt, filtered, searched and sor
   assert.deepEqual(ids({ group: 'all', q: '', sort: 'name' }), ['d', 'b', 'c', 'a']);
   assert.deepEqual(ids({ group: 'attention', q: '', sort: 'recent' }), ['c']);
   assert.deepEqual(ids({ group: 'reading', q: '', sort: 'recent' }), ['d']);
+  assert.deepEqual(ids({ group: 'challenged', q: '', sort: 'recent' }), []);
   assert.deepEqual(ids({ group: 'changed', q: '', sort: 'recent' }), ['b']);
   assert.deepEqual(ids({ group: 'late', q: '', sort: 'recent' }), ['b']);
   assert.deepEqual(ids({ group: 'all', q: ' 2203 ', sort: 'name' }), ['b', 'a']);

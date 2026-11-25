@@ -132,3 +132,38 @@ export async function checkEvaluation(submissionId: string): Promise<void> {
 export async function checkEvaluationForm(form: FormData): Promise<void> {
   await checkEvaluation(String(form.get('submission_id') ?? ''));
 }
+
+// ---------------------------------------------------------------------------
+// Challenging the AI's score
+// ---------------------------------------------------------------------------
+
+export type ChallengeError = keyof typeof learnCopy.evaluation.challenge.errors;
+
+/** What the challenge form shows after a refusal: the reason for it, and what was typed. */
+export interface ChallengeState {
+  error: ChallengeError | null;
+  reason: string;
+}
+
+const isChallengeError = (word: string): word is ChallengeError => word in learnCopy.evaluation.challenge.errors;
+
+/**
+ * A Learner tells their Mentor the AI got it wrong, and why. The database
+ * decides whether they may (`challenge_evaluation`): their own work, their
+ * latest attempt, once, while the AI's score still stands. No score changes;
+ * the Evaluation is marked for a person.
+ */
+export async function challengeScore(_previous: ChallengeState, form: FormData): Promise<ChallengeState> {
+  await requireViewer();
+  const reason = String(form.get('reason') ?? '');
+  const submissionId = String(form.get('submission_id') ?? '');
+  if (!isUuid(submissionId)) return { error: 'unknown', reason };
+
+  const supabase = await supabaseServer();
+  const { error } = await supabase.rpc('challenge_evaluation', { p_submission: submissionId, p_note: reason });
+  if (error) return { error: isChallengeError(error.message) ? error.message : 'unknown', reason };
+
+  const { data } = await supabase.from('submissions').select('task_id').eq('id', submissionId).maybeSingle();
+  if (data) revalidatePath(taskPaths.learnTask(data.task_id as string));
+  return { error: null, reason: '' };
+}

@@ -24,9 +24,11 @@ export interface AttemptProps {
   heading: 'h3' | 'h4';
   /** Where it is in the line for the AI, while it waits. */
   queue?: QueueEstimate;
+  /** The Learner's latest attempt: its score can be challenged. */
+  latest?: boolean;
 }
 
-export default function Attempt({ submission, number, deadline, now, heading: Heading, queue }: AttemptProps) {
+export default function Attempt({ submission, number, deadline, now, heading: Heading, queue, latest = false }: AttemptProps) {
   const late = lateBy(submission.created_at, deadline);
   const fileName = submission.file_path ? fileNameOf(submission.file_path) : null;
 
@@ -62,7 +64,7 @@ export default function Attempt({ submission, number, deadline, now, heading: He
       )}
 
       {submission.evaluation && (
-        <EvaluationCard evaluation={submission.evaluation} submissionId={submission.id} now={now} queue={queue} />
+        <EvaluationCard evaluation={submission.evaluation} submissionId={submission.id} now={now} queue={queue} canChallenge={latest} />
       )}
     </article>
   );

@@ -7,6 +7,8 @@
  * when the page redraws after a wait.
  */
 
+import StatusPill from '@/components/admin/StatusPill';
+import ChallengeForm from '@/components/tasks/ChallengeForm';
 import EvaluationWatch from '@/components/tasks/EvaluationWatch';
 import FeedbackList from '@/components/tasks/FeedbackList';
 import { learnCopy } from '@/content/tasks';
@@ -100,12 +102,15 @@ export default function EvaluationCard({
   submissionId,
   now,
   queue,
+  canChallenge = false,
 }: {
   evaluation: EvaluationRow;
   submissionId: string;
   now: number;
   /** Where this Submission is in the line for the AI, while it waits. */
   queue?: QueueEstimate;
+  /** This is the Learner's latest attempt, so its score is theirs to challenge. */
+  canChallenge?: boolean;
 }) {
   const superseded = evaluation.failure_reason === 'superseded';
   const overridden = evaluation.override_score !== null || evaluation.override_note !== null;
@@ -132,7 +137,18 @@ export default function EvaluationCard({
       {evaluation.status === 'done' && evaluation.ai_score !== null && evaluation.ai_feedback !== null && (
         <div className="learn-evaluation__block">
           <p className="learn-label">{copy.aiTitle}</p>
-          <Score value={evaluation.ai_score} superseded={evaluation.override_score !== null} />
+          <div className="learn-score-row">
+            <Score value={evaluation.ai_score} superseded={evaluation.override_score !== null} />
+            {evaluation.challenged_at && !overridden && <StatusPill tone="upcoming">{copy.challenge.sentTitle}</StatusPill>}
+            {canChallenge && !overridden && !evaluation.challenged_at && <ChallengeForm submissionId={submissionId} />}
+          </div>
+          {evaluation.challenged_at && (
+            <div className="learn-notice" data-tone={overridden ? 'quiet' : undefined}>
+              {!overridden && <p>{fill(copy.challenge.sent, { when: formatDateTime(evaluation.challenged_at) })}</p>}
+              <p className="learn-label">{copy.challenge.yourReason}</p>
+              <p className="task-feedback__plain">{evaluation.challenge_note}</p>
+            </div>
+          )}
           <FeedbackList feedback={evaluation.ai_feedback} />
           <p className="learn-note">
             {copy.aiNote} {evaluation.model && fill(copy.model, { model: evaluation.model })}

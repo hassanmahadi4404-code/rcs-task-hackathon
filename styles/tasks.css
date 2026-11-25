@@ -818,6 +818,37 @@ body.has-reticle .learn input::file-selector-button {
   color: var(--rcs-accent-ice);
 }
 
+.learn-score-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3) var(--sp-5);
+}
+
+/* The challenge form, folded beside the score. Open, it takes the row to itself. */
+.learn-challenge[open] {
+  flex-basis: 100%;
+}
+
+.learn-challenge > summary {
+  width: fit-content;
+  list-style: none;
+}
+
+.learn-challenge > summary::-webkit-details-marker {
+  display: none;
+}
+
+.learn-challenge > .learn-form {
+  margin-top: var(--sp-5);
+}
+
+/* Two classes, so it wins over the tall answer box whatever the order of the rules. */
+.learn-field__input.learn-field__input--short {
+  min-height: var(--sp-14);
+  font-family: var(--font-sans);
+}
+
 .learn-score {
   display: flex;
   align-items: baseline;
@@ -1167,6 +1198,8 @@ body.has-reticle .learn input::file-selector-button {
 }
 
 .task-flag {
+  display: grid;
+  gap: var(--sp-2);
   max-width: var(--content-max-w);
   padding: var(--sp-4);
   border: var(--hairline) solid var(--rcs-error);
@@ -1187,4 +1220,16 @@ body.has-reticle .learn input::file-selector-button {
       border-color var(--dur-fast) var(--ease-out),
       box-shadow var(--dur-fast) var(--ease-out);
   }
+}
+
+.task-flag__title {
+  color: var(--rcs-text);
+  font-family: var(--font-secondary);
+  font-size: var(--fs-admin-body);
+  font-weight: 500;
+}
+
+/* A challenge a person has already answered: kept, no longer asking. */
+.task-flag[data-tone="answered"] {
+  border-color: var(--rcs-hairline-strong);
 }

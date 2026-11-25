@@ -35,7 +35,7 @@ Follow [CONTRIBUTING.md](CONTRIBUTING.md), "Set up locally". The two variables i
 
 ```bash
 npm run gate      # lint, tsc, 85 unit tests, build, kit-check
-npm run test:db   # 118 pgTAP checks of the access rules, as each seed person
+npm run test:db   # 134 pgTAP checks of the access rules, as each seed person
 ```
 
 `npm run test:db` needs the seeded local database (`npx supabase db reset`).
@@ -44,7 +44,7 @@ npm run test:db   # 118 pgTAP checks of the access rules, as each seed person
 
 | | |
 |---|---|
-| `supabase/migrations/2026111[2-6]*` | Columns, policies, the hand-in trigger, the override functions, Storage policies, the Session timeline, the leaderboard, Track status and the queue for the AI. |
+| `supabase/migrations/2026111[2-7]*` | Columns, policies, the hand-in trigger, the override functions, Storage policies, the Session timeline, the leaderboard, Track status, the queue for the AI and challenges. |
 | `supabase/tests/` | The same rules, tried as each seed person with only their own session. |
 | `supabase/data/` | The society's own plan of Sessions, to load by hand into a local database. Not part of the seed. |
 | `lib/evaluate.ts`, `lib/tasks/evaluator-*.ts` | The evaluator seam: `mock`, `gemini`, `fail`. |

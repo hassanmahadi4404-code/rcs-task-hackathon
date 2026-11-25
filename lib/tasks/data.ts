@@ -21,7 +21,7 @@ const TRACK = 'id, name, description, archived, upcoming, position';
 const SESSION = 'id, track_id, title, held_on, topic, position, date_tbc';
 const TASK = 'id, session_id, title, instructions, grading_criteria, deadline, formats, published_at';
 const EVALUATION =
-  'submission_id, status, ai_score, ai_feedback, model, override_score, override_note, overridden_by, overridden_at, updated_at, attempts, next_attempt_at, failure_reason, flagged';
+  'submission_id, status, ai_score, ai_feedback, model, override_score, override_note, overridden_by, overridden_at, updated_at, attempts, next_attempt_at, failure_reason, flagged, challenged_at, challenge_note';
 const SUBMISSION = `id, task_id, member_id, body, file_path, file_size, created_at, evaluation:evaluations(${EVALUATION})`;
 
 /** PostgREST returns a to-one join as an object or a one-item list, by how it reads the key. */
@@ -158,7 +158,7 @@ export async function submissionFile(submissionId: string): Promise<{ file_path:
 export type SubmissionGlance = Pick<SubmissionRow, 'id' | 'task_id' | 'member_id' | 'created_at' | 'evaluation'>;
 
 const GLANCE =
-  'id, task_id, member_id, created_at, evaluation:evaluations(status, ai_score, override_score, override_note, flagged, failure_reason)';
+  'id, task_id, member_id, created_at, evaluation:evaluations(status, ai_score, override_score, override_note, flagged, failure_reason, challenged_at)';
 
 export interface SessionItem {
   session: SessionRow;

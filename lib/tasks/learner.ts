@@ -19,22 +19,29 @@ export interface AttemptSummary {
   overrideScore: number | null;
   /** A Mentor set a score, wrote a note, or both. */
   overridden: boolean;
+  /** The Learner challenged the AI's score and nobody has answered yet. */
+  challenged: boolean;
 }
 
-export type LearnerState = 'todo' | 'todo_late' | 'reading' | 'feedback' | 'mentor' | 'needs_mentor' | 'missed';
+export type LearnerState = 'todo' | 'todo_late' | 'reading' | 'feedback' | 'challenged' | 'mentor' | 'needs_mentor' | 'missed';
 
 /** The Mentor's score when there is one, otherwise the AI's. */
 export function effectiveScore(scores: { aiScore: number | null; overrideScore: number | null }): number | null {
   return scores.overrideScore ?? scores.aiScore;
 }
 
-export function summarise(createdAt: string, evaluation: Pick<EvaluationRow, 'status' | 'ai_score' | 'override_score' | 'override_note'> | null): AttemptSummary {
+type Summarised = Pick<EvaluationRow, 'status' | 'ai_score' | 'override_score' | 'override_note'> &
+  Partial<Pick<EvaluationRow, 'challenged_at'>>;
+
+export function summarise(createdAt: string, evaluation: Summarised | null): AttemptSummary {
+  const overridden = evaluation ? evaluation.override_score !== null || evaluation.override_note !== null : false;
   return {
     createdAt,
     status: evaluation?.status ?? 'pending',
     aiScore: evaluation?.ai_score ?? null,
     overrideScore: evaluation?.override_score ?? null,
-    overridden: evaluation ? evaluation.override_score !== null || evaluation.override_note !== null : false,
+    overridden,
+    challenged: !overridden && Boolean(evaluation?.challenged_at),
   };
 }
 
@@ -50,6 +57,7 @@ export function learnerState(deadline: string, attempts: readonly AttemptSummary
     return phase === 'open' ? 'todo' : phase === 'late' ? 'todo_late' : 'missed';
   }
   if (latest.overridden) return 'mentor';
+  if (latest.challenged) return 'challenged';
   if (latest.status === 'done') return 'feedback';
   return latest.status === 'failed' ? 'needs_mentor' : 'reading';
 }
