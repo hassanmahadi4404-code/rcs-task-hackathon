@@ -1222,6 +1222,27 @@ body.has-reticle .learn input::file-selector-button {
   flex: 1 1 var(--task-card-min);
 }
 
+/* The Sessions timeline has more columns than any other list here. The
+   dashboard's table gives its first column 40% and keeps dates on one line;
+   with eight columns that pushes the last one off a 1024px screen. Here the
+   Session's name is short, so it takes only what it needs, and a date may
+   break across two lines. */
+@media (min-width: 768px) {
+  .task-timeline .admin-rows thead th:first-child {
+    width: auto;
+  }
+
+  .task-timeline .admin-rows .admin-mono,
+  .task-timeline .admin-rows thead th {
+    white-space: normal;
+  }
+
+  .task-timeline .admin-rows th,
+  .task-timeline .admin-rows td {
+    padding-inline: var(--sp-2);
+  }
+}
+
 /* The Sessions timeline: a syllabus line is prose and wraps; an email is one
    long word and must be allowed to break rather than widen the table. */
 .task-topic {
@@ -1232,8 +1253,10 @@ body.has-reticle .learn input::file-selector-button {
 }
 
 /* From 768px the list is a table, and the syllabus is the column worth the
-   room; below it each row is a card, as wide as the screen. */
-@media (min-width: 768px) {
+   room; below it each row is a card, as wide as the screen. The table has
+   eight columns beside a sidebar, so the room is only given where there is
+   some: asking for it at 1024px pushes the last column off the screen. */
+@media (min-width: 1440px) {
   .task-topic {
     min-width: var(--task-card-min);
   }
@@ -1243,7 +1266,7 @@ body.has-reticle .learn input::file-selector-button {
   overflow-wrap: anywhere;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1440px) {
   .task-email {
     white-space: nowrap;
   }

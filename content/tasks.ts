@@ -381,7 +381,8 @@ export const mentorCopy = {
     /** Above the timeline; each count picks its own singular or plural. */
     summary: '{sessions} · {tracks}',
     count: { session: '1 Session', sessions: '{n} Sessions', track: '1 Track', tracks: '{n} Tracks' },
-    columns: ['Session', 'Syllabus / Topic', 'Mentor 1', 'Mentor 2', 'Date', 'Tasks', 'Submissions'],
+    /** Eight columns beside a sidebar: the two counts keep one short word each. `Work` is Submissions. */
+    columns: ['Session', 'Syllabus / Topic', 'Mentor 1', 'Mentor 2', 'Date', 'Tasks', 'Work'],
     status: 'Status',
     /** A cell with nothing to show: no Mentor named, no syllabus written. */
     none: '–',

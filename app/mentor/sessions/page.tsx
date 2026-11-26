@@ -102,7 +102,9 @@ export default async function SessionsPage() {
         )}
       </PageHeader>
       {groups.length > 0 ? (
-        <RowList label={copy.label} columns={[...copy.columns]} status={copy.status} groups={groups} />
+        <div className="task-timeline">
+          <RowList label={copy.label} columns={[...copy.columns]} status={copy.status} groups={groups} />
+        </div>
       ) : (
         <EmptyState>{scope.isOfficer ? copy.emptyOfficer : copy.emptyMentor}</EmptyState>
       )}
